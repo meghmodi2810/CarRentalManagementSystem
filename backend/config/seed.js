@@ -1,20 +1,27 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import User from '../models/User.js';
 import Car from '../models/Car.js';
 import Rental from '../models/Rental.js';
 
-dotenv.config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+dotenv.config({ path: path.join(__dirname, '..', '.env') });
+
+const ATLAS_FALLBACK_URI =
+  'mongodb+srv://meghmodi4ever_db_user:06DexyFnMfm1cd65@carrental.lto24xu.mongodb.net/car_rental_db?retryWrites=true&w=majority';
 
 export const seedInitialData = async () => {
   try {
     const carCount = await Car.countDocuments();
     if (carCount > 0) {
-      console.log(`ℹ️ Database already contains ${carCount} cars. Skipping seed.`);
+      console.log(`ℹ️ Database already contains ${carCount} cars. Skipping duplicate seed.`);
       return;
     }
 
-    console.log('🌱 Database is empty. Seeding initial demo cars and users...');
+    console.log('🌱 Seeding initial demo cars and users into MongoDB Atlas...');
 
     // 1. Create Users
     const adminUser = await User.create({
@@ -35,7 +42,7 @@ export const seedInitialData = async () => {
       drivingLicenseNumber: 'DL-NY-847291'
     });
 
-    console.log('✅ Users created:');
+    console.log('✅ Users created in database:');
     console.log('   - Admin: admin@carrental.com / adminpassword123');
     console.log('   - Customer: alex@example.com / password123');
 
@@ -139,9 +146,9 @@ export const seedInitialData = async () => {
       }
     ]);
 
-    console.log(`✅ Seeded ${cars.length} cars into fleet.`);
+    console.log(`✅ Seeded ${cars.length} cars into MongoDB Atlas.`);
 
-    // 3. Create Sample Active Rental
+    // 3. Create Sample Booking
     const today = new Date();
     const startDate = new Date(today);
     startDate.setDate(today.getDate() + 1);
@@ -161,10 +168,10 @@ export const seedInitialData = async () => {
       pickupLocation: 'Downtown Hub',
       dropoffLocation: 'Downtown Hub',
       paymentStatus: 'paid',
-      notes: 'Initial test booking for customer Alex Johnson'
+      notes: 'Initial test reservation for customer Alex Johnson'
     });
 
-    console.log('✅ Sample booking created successfully.');
+    console.log('✅ Sample booking created successfully in MongoDB Atlas.');
   } catch (error) {
     console.error('Error seeding data:', error.message);
   }
@@ -172,14 +179,17 @@ export const seedInitialData = async () => {
 
 // Standalone execution
 if (process.argv[1] && process.argv[1].endsWith('seed.js')) {
+  const uri = process.env.MONGO_URI || ATLAS_FALLBACK_URI;
+  console.log('Connecting to MongoDB Atlas...');
   mongoose
-    .connect(process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/car_rental_db')
+    .connect(uri, { serverSelectionTimeoutMS: 8000 })
     .then(async () => {
-      console.log('Connected to MongoDB. Resetting collections...');
+      console.log('Connected! Resetting collections for fresh seed...');
       await Rental.deleteMany();
       await Car.deleteMany();
       await User.deleteMany();
       await seedInitialData();
+      console.log('🎉 Seeding completed successfully!');
       process.exit(0);
     })
     .catch((err) => {
