@@ -1,15 +1,25 @@
 import Car from '../models/Car.js';
+import Rental from '../models/Rental.js';
 
-// @desc    Get all cars with filters and search
+// @desc    Get all cars with filters, search, and date-range availability
 // @route   GET /api/cars
 // @access  Public
 export const getCars = async (req, res, next) => {
   try {
-    const { category, status, minPrice, maxPrice, search, sort } = req.query;
+    const {
+      category,
+      status,
+      minPrice,
+      maxPrice,
+      search,
+      sort,
+      startDate,
+      endDate
+    } = req.query;
 
     const query = {};
 
-    if (category) {
+    if (category && category !== 'All') {
       query.category = category;
     }
 
@@ -29,6 +39,26 @@ export const getCars = async (req, res, next) => {
         { model: { $regex: search, $options: 'i' } },
         { location: { $regex: search, $options: 'i' } }
       ];
+    }
+
+    // Exclude cars that are already booked for the requested date window
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+
+      if (!isNaN(start.getTime()) && !isNaN(end.getTime()) && end > start) {
+        const conflictingRentals = await Rental.find({
+          status: { $in: ['confirmed', 'active'] },
+          $or: [
+            { startDate: { $lte: end }, endDate: { $gte: start } }
+          ]
+        }).select('car');
+
+        const bookedCarIds = conflictingRentals.map((r) => r.car);
+        if (bookedCarIds.length > 0) {
+          query._id = { $nin: bookedCarIds };
+        }
+      }
     }
 
     let queryBuilder = Car.find(query);
@@ -142,4 +172,3 @@ export const deleteCar = async (req, res, next) => {
     next(error);
   }
 };
-

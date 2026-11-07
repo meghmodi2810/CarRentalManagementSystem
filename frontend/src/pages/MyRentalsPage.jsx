@@ -4,13 +4,28 @@ import api from '../api/axios';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ErrorMessage from '../components/ErrorMessage';
 import EmptyState from '../components/EmptyState';
-import { Calendar, MapPin, DollarSign, Clock, AlertCircle, Ban, Car, CheckCircle2 } from 'lucide-react';
+import {
+  Calendar,
+  MapPin,
+  DollarSign,
+  Clock,
+  AlertCircle,
+  Ban,
+  Car,
+  FileText,
+  Printer,
+  X,
+  CheckCircle2
+} from 'lucide-react';
 
 const MyRentalsPage = () => {
   const [rentals, setRentals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [actionNotice, setActionNotice] = useState(null);
+
+  // Selected rental for Receipt / Invoice Modal
+  const [selectedRental, setSelectedRental] = useState(null);
 
   const fetchMyRentals = async () => {
     setLoading(true);
@@ -63,7 +78,7 @@ const MyRentalsPage = () => {
             View your active bookings, past trips, and reservation details
           </p>
         </div>
-        <Link to="/" className="li-btn li-btn-outline li-btn-sm">
+        <Link to="/fleet" className="li-btn li-btn-outline li-btn-sm">
           Browse Fleet
         </Link>
       </div>
@@ -75,17 +90,17 @@ const MyRentalsPage = () => {
         </div>
       )}
 
-      {loading && <LoadingSpinner message="Retrieving your bookings..." />}
+      {loading && <LoadingSpinner message="Retrieving your bookings from database..." />}
 
       {!loading && error && <ErrorMessage message={error} onRetry={fetchMyRentals} />}
 
       {!loading && !error && rentals.length === 0 && (
         <EmptyState
           icon={Calendar}
-          title="No bookings yet"
+          title="No bookings found"
           message="You haven't made any vehicle reservations. Explore our fleet and reserve your next trip!"
           actionText="Explore Fleet"
-          actionLink="/"
+          actionLink="/fleet"
         />
       )}
 
@@ -153,19 +168,104 @@ const MyRentalsPage = () => {
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.75rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '0.75rem' }}>
+                  <button
+                    onClick={() => setSelectedRental(rental)}
+                    className="li-btn li-btn-subtle li-btn-sm"
+                  >
+                    <FileText size={14} /> View Invoice
+                  </button>
+
                   {['pending', 'confirmed'].includes(rental.status) && (
                     <button
                       onClick={() => handleCancel(rental._id)}
                       className="li-btn li-btn-danger-outline li-btn-sm"
                     >
-                      <Ban size={14} /> Cancel Reservation
+                      <Ban size={14} /> Cancel Booking
                     </button>
                   )}
                 </div>
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Invoice / Receipt Modal */}
+      {selectedRental && (
+        <div className="li-modal-overlay" onClick={() => setSelectedRental(null)}>
+          <div className="li-modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '480px' }}>
+            <div className="li-modal-head">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <Car size={20} color="var(--li-primary)" />
+                <strong style={{ fontSize: '1.1rem' }}>DriveFlow Rental Receipt</strong>
+              </div>
+              <button
+                onClick={() => setSelectedRental(null)}
+                style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div style={{ borderBottom: '1px solid var(--li-border)', paddingBottom: '0.75rem', marginBottom: '1rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: 'var(--li-text-secondary)' }}>
+                <span>Invoice ID: <code>#{selectedRental._id.toUpperCase()}</code></span>
+                <span>{new Date(selectedRental.createdAt).toLocaleDateString()}</span>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem', fontSize: '0.875rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: 'var(--li-text-secondary)' }}>Reserved Vehicle</span>
+                <strong>{selectedRental.car?.make} {selectedRental.car?.model}</strong>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: 'var(--li-text-secondary)' }}>License Plate</span>
+                <code>{selectedRental.car?.licensePlate || 'N/A'}</code>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: 'var(--li-text-secondary)' }}>Rental Period</span>
+                <span>{formatDate(selectedRental.startDate)} - {formatDate(selectedRental.endDate)}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: 'var(--li-text-secondary)' }}>Duration</span>
+                <span>{selectedRental.totalDays} {selectedRental.totalDays === 1 ? 'Day' : 'Days'} @ ${selectedRental.dailyRate}/day</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: 'var(--li-text-secondary)' }}>Pickup / Return Location</span>
+                <span>{selectedRental.pickupLocation}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: 'var(--li-text-secondary)' }}>Payment Status</span>
+                <span className="li-badge li-badge-available">PAID</span>
+              </div>
+            </div>
+
+            <div
+              style={{
+                borderTop: '2px dashed var(--li-border)',
+                marginTop: '1rem',
+                paddingTop: '0.75rem',
+                display: 'flex',
+                justifyContent: 'space-between',
+                fontSize: '1.1rem',
+                fontWeight: 800
+              }}
+            >
+              <span>Total Amount</span>
+              <span style={{ color: 'var(--li-primary)' }}>${selectedRental.totalAmount}.00</span>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '1.25rem' }}>
+              <button
+                onClick={() => window.print()}
+                className="li-btn li-btn-primary li-btn-sm"
+              >
+                <Printer size={14} /> Print Receipt
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
