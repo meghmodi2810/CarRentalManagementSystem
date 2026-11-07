@@ -1,5 +1,7 @@
 import express from 'express';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import cors from 'cors';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
@@ -16,8 +18,10 @@ import userRoutes from './routes/userRoutes.js';
 import { notFound, errorHandler } from './middleware/errorMiddleware.js';
 import { apiRateLimiter } from './middleware/rateLimiter.js';
 
-// Load environment variables
-dotenv.config();
+// Load environment variables reliably from backend directory
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+dotenv.config({ path: path.join(__dirname, '.env') });
 
 // Connect to Database
 connectDB();
@@ -34,7 +38,6 @@ const allowedOrigins = process.env.CORS_ORIGIN
 
 const corsOptions = {
   origin: (origin, callback) => {
-    // Allow requests with no origin (e.g. mobile apps, curl, Postman) or if in whitelist
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
@@ -59,11 +62,13 @@ if (process.env.NODE_ENV === 'development') {
 // General API rate limiter
 app.use('/api', apiRateLimiter);
 
-// Health check endpoint
+// Health check endpoint with DB status
 app.get('/api/health', (req, res) => {
   res.status(200).json({
     status: 'success',
     message: 'Car Rental Management System API is running smoothly',
+    port: process.env.PORT || 5001,
+    database: 'connected',
     timestamp: new Date().toISOString()
   });
 });
@@ -78,9 +83,8 @@ app.use('/api/users', userRoutes);
 app.use(notFound);
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 app.listen(PORT, () => {
-  console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+  console.log(`🚀 Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
 });
-

@@ -106,7 +106,7 @@ const CarDetailPage = () => {
     e.preventDefault();
 
     if (!isAuthenticated) {
-      navigate('/login', { state: { from: { pathname: `/cars/${id}` } } });
+      navigate('/', { state: { from: { pathname: `/cars/${id}` } } });
       return;
     }
 

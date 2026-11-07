@@ -1,15 +1,14 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import ProtectedRoute from './components/ProtectedRoute';
 
 // Pages
+import AuthLandingPage from './pages/AuthLandingPage';
 import HomePage from './pages/HomePage';
 import CarDetailPage from './pages/CarDetailPage';
-import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
 import MyRentalsPage from './pages/MyRentalsPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
 import NotFoundPage from './pages/NotFoundPage';
@@ -22,11 +21,14 @@ function App() {
           <Navbar />
           <main className="main-content">
             <Routes>
-              {/* Public Routes */}
-              <Route path="/" element={<HomePage />} />
+              {/* FIRST PAGE: Login & Signup Landing Page */}
+              <Route path="/" element={<AuthLandingPage />} />
+              <Route path="/login" element={<AuthLandingPage />} />
+              <Route path="/register" element={<AuthLandingPage />} />
+
+              {/* Fleet Browsing Page */}
+              <Route path="/fleet" element={<HomePage />} />
               <Route path="/cars/:id" element={<CarDetailPage />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
 
               {/* Protected Customer Routes */}
               <Route

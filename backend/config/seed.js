@@ -6,16 +6,15 @@ import Rental from '../models/Rental.js';
 
 dotenv.config();
 
-const seedData = async () => {
+export const seedInitialData = async () => {
   try {
-    await mongoose.connect(process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/car_rental_db');
-    console.log('MongoDB connected for seeding...');
+    const carCount = await Car.countDocuments();
+    if (carCount > 0) {
+      console.log(`ℹ️ Database already contains ${carCount} cars. Skipping seed.`);
+      return;
+    }
 
-    // Clear existing data
-    await Rental.deleteMany();
-    await Car.deleteMany();
-    await User.deleteMany();
-    console.log('Cleared existing collections...');
+    console.log('🌱 Database is empty. Seeding initial demo cars and users...');
 
     // 1. Create Users
     const adminUser = await User.create({
@@ -36,9 +35,9 @@ const seedData = async () => {
       drivingLicenseNumber: 'DL-NY-847291'
     });
 
-    console.log('Users created:');
-    console.log(` - Admin: admin@carrental.com / adminpassword123`);
-    console.log(` - Customer: alex@example.com / password123`);
+    console.log('✅ Users created:');
+    console.log('   - Admin: admin@carrental.com / adminpassword123');
+    console.log('   - Customer: alex@example.com / password123');
 
     // 2. Create Cars
     const cars = await Car.insertMany([
@@ -140,14 +139,15 @@ const seedData = async () => {
       }
     ]);
 
-    console.log(`Created ${cars.length} sample cars.`);
+    console.log(`✅ Seeded ${cars.length} cars into fleet.`);
 
-    // 3. Create Sample Rental
+    // 3. Create Sample Active Rental
     const today = new Date();
-    const startDate = new Date(today.setDate(today.getDate() + 1));
-    const endDate = new Date(today.setDate(today.getDate() + 4));
+    const startDate = new Date(today);
+    startDate.setDate(today.getDate() + 1);
+    const endDate = new Date(today);
+    endDate.setDate(today.getDate() + 4);
     const totalDays = 3;
-    const totalAmount = totalDays * cars[0].dailyRate;
 
     await Rental.create({
       customer: customerUser._id,
@@ -156,7 +156,7 @@ const seedData = async () => {
       endDate,
       totalDays,
       dailyRate: cars[0].dailyRate,
-      totalAmount,
+      totalAmount: totalDays * cars[0].dailyRate,
       status: 'confirmed',
       pickupLocation: 'Downtown Hub',
       dropoffLocation: 'Downtown Hub',
@@ -164,14 +164,26 @@ const seedData = async () => {
       notes: 'Initial test booking for customer Alex Johnson'
     });
 
-    console.log('Sample rental created successfully!');
-    console.log('Database seeding complete.');
-    process.exit(0);
+    console.log('✅ Sample booking created successfully.');
   } catch (error) {
-    console.error('Error seeding database:', error);
-    process.exit(1);
+    console.error('Error seeding data:', error.message);
   }
 };
 
-seedData();
-
+// Standalone execution
+if (process.argv[1] && process.argv[1].endsWith('seed.js')) {
+  mongoose
+    .connect(process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/car_rental_db')
+    .then(async () => {
+      console.log('Connected to MongoDB. Resetting collections...');
+      await Rental.deleteMany();
+      await Car.deleteMany();
+      await User.deleteMany();
+      await seedInitialData();
+      process.exit(0);
+    })
+    .catch((err) => {
+      console.error('Connection error:', err.message);
+      process.exit(1);
+    });
+}

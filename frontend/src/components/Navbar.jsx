@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Car, CalendarCheck, ShieldCheck, LogOut, LogIn, UserPlus, Search } from 'lucide-react';
+import { Car, CalendarCheck, ShieldCheck, LogOut, Search } from 'lucide-react';
 
 const Navbar = () => {
   const { user, isAuthenticated, isAdmin, logout } = useAuth();
@@ -9,7 +9,7 @@ const Navbar = () => {
 
   const handleLogout = async () => {
     await logout();
-    navigate('/login');
+    navigate('/');
   };
 
   const getInitials = (name) => {
@@ -27,7 +27,7 @@ const Navbar = () => {
       <div className="li-header-inner">
         {/* Left: Brand & Search Bar */}
         <div className="li-header-left">
-          <Link to="/" className="li-brand">
+          <Link to={isAuthenticated ? '/fleet' : '/'} className="li-brand">
             <div className="li-brand-logo-icon">
               <Car size={20} />
             </div>
@@ -36,26 +36,27 @@ const Navbar = () => {
             </span>
           </Link>
 
-          <div className="li-search-box">
-            <Search className="li-search-icon" size={16} />
-            <input
-              type="text"
-              placeholder="Search vehicles, brands, cities..."
-              className="li-search-input"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  navigate(`/?search=${encodeURIComponent(e.target.value)}`);
-                }
-              }}
-            />
-          </div>
+          {isAuthenticated && (
+            <div className="li-search-box">
+              <Search className="li-search-icon" size={16} />
+              <input
+                type="text"
+                placeholder="Search fleet, brands, branches..."
+                className="li-search-input"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    navigate(`/fleet?search=${encodeURIComponent(e.target.value)}`);
+                  }
+                }}
+              />
+            </div>
+          )}
         </div>
 
-        {/* Center / Right: LinkedIn-style Icon + Label Nav Items */}
+        {/* Center: Navigation Links */}
         <nav className="li-nav">
           <NavLink
-            to="/"
-            end
+            to="/fleet"
             className={({ isActive }) => `li-nav-item ${isActive ? 'active' : ''}`}
           >
             <Car size={20} />
@@ -83,7 +84,7 @@ const Navbar = () => {
           )}
         </nav>
 
-        {/* Auth / Profile Area */}
+        {/* Right: Auth Profile Area */}
         <div className="li-header-right">
           {isAuthenticated ? (
             <div className="li-user-menu">
@@ -104,11 +105,8 @@ const Navbar = () => {
             </div>
           ) : (
             <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <Link to="/login" className="li-btn li-btn-subtle li-btn-sm">
-                Sign in
-              </Link>
-              <Link to="/register" className="li-btn li-btn-primary li-btn-sm">
-                Join now
+              <Link to="/" className="li-btn li-btn-primary li-btn-sm">
+                Sign in / Join
               </Link>
             </div>
           )}
