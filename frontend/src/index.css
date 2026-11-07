@@ -1,0 +1,1216 @@
+/* ==========================================================================
+   DriveFlow Car Rental - LinkedIn-Inspired Professional Design System
+   ========================================================================== */
+
+:root {
+  /* LinkedIn Color Palette */
+  --li-bg: #f4f2ee;
+  --li-surface: #ffffff;
+  --li-surface-hover: #f9fafb;
+  --li-border: #e8e6df;
+  --li-border-subtle: #f0eee6;
+  --li-border-focus: #0a66c2;
+
+  /* Typography Colors */
+  --li-text-primary: #191919;
+  --li-text-secondary: #5e5e5e;
+  --li-text-tertiary: #8c8c8c;
+  --li-text-link: #0a66c2;
+
+  /* Brand Accents */
+  --li-primary: #0a66c2;
+  --li-primary-hover: #004182;
+  --li-primary-light: #ebf4fd;
+  --li-primary-active: #d0e8ff;
+
+  /* Status Colors */
+  --li-success: #057642;
+  --li-success-bg: #e6f4ea;
+  --li-warning: #b25900;
+  --li-warning-bg: #fff8e6;
+  --li-danger: #c02626;
+  --li-danger-bg: #fdf2f2;
+
+  /* Shadows & Radius */
+  --li-shadow-card: 0 0 0 1px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
+  --li-shadow-hover: 0 0 0 1px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.08);
+  --li-shadow-popover: 0 4px 16px rgba(0, 0, 0, 0.15);
+  --li-radius-card: 10px;
+  --li-radius-pill: 28px;
+  --li-radius-input: 6px;
+
+  /* Fonts */
+  --li-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--li-font);
+  background-color: var(--li-bg);
+  color: var(--li-text-primary);
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+a {
+  color: var(--li-text-link);
+  text-decoration: none;
+  font-weight: 600;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+/* Layout */
+.app-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.main-content {
+  flex: 1;
+  padding-bottom: 3rem;
+}
+
+.linkedin-container {
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 1.25rem 1rem;
+}
+
+/* ==========================================================================
+   LinkedIn Top Header & Navigation Bar
+   ========================================================================== */
+.li-header {
+  background-color: var(--li-surface);
+  border-bottom: 1px solid var(--li-border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+.li-header-inner {
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 0 1rem;
+  height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.li-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  flex: 1;
+  max-width: 480px;
+}
+
+.li-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  text-decoration: none !important;
+  color: var(--li-text-primary);
+}
+
+.li-brand-logo-icon {
+  background-color: var(--li-primary);
+  color: #ffffff;
+  width: 34px;
+  height: 34px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+}
+
+.li-brand-text {
+  font-weight: 700;
+  font-size: 1.1rem;
+  letter-spacing: -0.01em;
+  color: var(--li-text-primary);
+}
+
+.li-brand-highlight {
+  color: var(--li-primary);
+}
+
+/* Header Search Bar */
+.li-search-box {
+  position: relative;
+  width: 100%;
+  max-width: 280px;
+}
+
+.li-search-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--li-text-secondary);
+  pointer-events: none;
+}
+
+.li-search-input {
+  width: 100%;
+  background-color: #edf3f8;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 0.45rem 0.85rem 0.45rem 2.25rem;
+  font-size: 0.875rem;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.li-search-input:focus {
+  background-color: #ffffff;
+  border-color: var(--li-primary);
+  box-shadow: 0 0 0 2px rgba(10, 102, 194, 0.2);
+}
+
+/* Header Navigation Links (Icon above label) */
+.li-nav {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  gap: 0.5rem;
+}
+
+.li-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 54px;
+  min-width: 65px;
+  padding: 0 0.5rem;
+  color: var(--li-text-secondary);
+  text-decoration: none !important;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s ease;
+  position: relative;
+}
+
+.li-nav-item:hover {
+  color: var(--li-text-primary);
+}
+
+.li-nav-item.active {
+  color: var(--li-text-primary);
+  border-bottom-color: var(--li-text-primary);
+}
+
+.li-nav-item.admin-active {
+  border-bottom-color: var(--li-primary);
+  color: var(--li-primary);
+}
+
+.li-nav-item svg {
+  margin-bottom: 2px;
+}
+
+/* User & Auth Buttons in Nav */
+.li-header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.li-user-menu {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--li-radius-pill);
+  cursor: pointer;
+}
+
+.li-avatar-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: var(--li-primary);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+}
+
+.li-avatar-sm {
+  width: 24px;
+  height: 24px;
+  font-size: 0.75rem;
+}
+
+.li-user-info-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.li-user-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--li-text-primary);
+  max-width: 110px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.li-user-role-tag {
+  font-size: 0.7rem;
+  color: var(--li-text-secondary);
+  text-transform: capitalize;
+}
+
+.li-logout-btn {
+  background: transparent;
+  border: none;
+  color: var(--li-text-secondary);
+  cursor: pointer;
+  padding: 0.4rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.li-logout-btn:hover {
+  background-color: #f3f2ee;
+  color: var(--li-danger);
+}
+
+/* ==========================================================================
+   Buttons (LinkedIn Pill Style)
+   ========================================================================== */
+.li-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 0.45rem 1rem;
+  border-radius: var(--li-radius-pill);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+  text-decoration: none !important;
+}
+
+.li-btn-primary {
+  background-color: var(--li-primary);
+  color: #ffffff;
+}
+.li-btn-primary:hover:not(:disabled) {
+  background-color: var(--li-primary-hover);
+}
+
+.li-btn-outline {
+  background-color: transparent;
+  border-color: var(--li-primary);
+  color: var(--li-primary);
+}
+.li-btn-outline:hover:not(:disabled) {
+  background-color: rgba(10, 102, 194, 0.08);
+}
+
+.li-btn-subtle {
+  background-color: transparent;
+  border-color: var(--li-border);
+  color: var(--li-text-secondary);
+}
+.li-btn-subtle:hover:not(:disabled) {
+  background-color: rgba(0, 0, 0, 0.04);
+  color: var(--li-text-primary);
+}
+
+.li-btn-danger-outline {
+  background-color: transparent;
+  border-color: var(--li-danger);
+  color: var(--li-danger);
+}
+.li-btn-danger-outline:hover:not(:disabled) {
+  background-color: var(--li-danger-bg);
+}
+
+.li-btn-sm {
+  padding: 0.3rem 0.75rem;
+  font-size: 0.8rem;
+}
+
+.li-btn-block {
+  width: 100%;
+}
+
+.li-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ==========================================================================
+   LinkedIn 3-Column Layout (Home & Fleet)
+   ========================================================================== */
+.li-grid-layout {
+  display: grid;
+  grid-template-columns: 240px 1fr 280px;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+/* Cards (Standard LinkedIn Box) */
+.li-card {
+  background-color: var(--li-surface);
+  border-radius: var(--li-radius-card);
+  box-shadow: var(--li-shadow-card);
+  border: 1px solid var(--li-border);
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+/* Left Sidebar Profile / Member Card */
+.li-profile-card-header {
+  height: 60px;
+  background: linear-gradient(135deg, #a0b4b7 0%, #d8e2dc 100%);
+  position: relative;
+}
+
+.li-profile-avatar-wrap {
+  position: absolute;
+  top: 25px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.li-avatar-lg {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  background-color: var(--li-primary);
+  color: #ffffff;
+  border: 3px solid #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.li-profile-card-body {
+  padding: 42px 1rem 1rem;
+  text-align: center;
+}
+
+.li-profile-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--li-text-primary);
+  margin-bottom: 0.15rem;
+}
+
+.li-profile-headline {
+  font-size: 0.785rem;
+  color: var(--li-text-secondary);
+  line-height: 1.35;
+  margin-bottom: 1rem;
+}
+
+.li-profile-stats {
+  border-top: 1px solid var(--li-border);
+  padding-top: 0.75rem;
+  margin-top: 0.75rem;
+  text-align: left;
+}
+
+.li-profile-stat-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.785rem;
+  color: var(--li-text-secondary);
+  padding: 0.25rem 0;
+}
+
+.li-profile-stat-val {
+  color: var(--li-primary);
+  font-weight: 700;
+}
+
+/* Filter Card in Left Rail */
+.li-filter-card {
+  padding: 1rem;
+}
+
+.li-filter-title {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--li-text-primary);
+  margin-bottom: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.li-category-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.li-category-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.4rem 0.65rem;
+  border-radius: 6px;
+  background: transparent;
+  border: none;
+  font-size: 0.825rem;
+  font-weight: 500;
+  color: var(--li-text-secondary);
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s;
+}
+
+.li-category-btn:hover {
+  background-color: var(--li-bg);
+  color: var(--li-text-primary);
+}
+
+.li-category-btn.active {
+  background-color: var(--li-primary-light);
+  color: var(--li-primary);
+  font-weight: 700;
+}
+
+/* ==========================================================================
+   Center Feed: Fleet Listing (LinkedIn Feed Card Style)
+   ========================================================================== */
+.li-search-widget {
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.li-search-widget-row {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.li-feed-search-input {
+  flex: 1;
+  background-color: var(--li-bg);
+  border: 1px solid var(--li-border);
+  border-radius: var(--li-radius-pill);
+  padding: 0.65rem 1.25rem;
+  font-size: 0.9rem;
+  color: var(--li-text-primary);
+  outline: none;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+
+.li-feed-search-input:focus {
+  background-color: #ffffff;
+  border-color: var(--li-primary);
+}
+
+.li-sort-select {
+  background-color: var(--li-bg);
+  border: 1px solid var(--li-border);
+  border-radius: var(--li-radius-pill);
+  padding: 0.55rem 0.85rem;
+  font-size: 0.825rem;
+  color: var(--li-text-secondary);
+  font-weight: 600;
+  outline: none;
+  cursor: pointer;
+}
+
+/* Vehicle Feed Card */
+.li-vehicle-card {
+  padding: 1.25rem;
+  transition: box-shadow 0.2s ease;
+}
+
+.li-vehicle-card:hover {
+  box-shadow: var(--li-shadow-hover);
+}
+
+.li-vehicle-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.85rem;
+}
+
+.li-vehicle-author-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.li-vehicle-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 6px;
+  background-color: #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--li-primary);
+  border: 1px solid var(--li-border);
+}
+
+.li-vehicle-title-wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.li-vehicle-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--li-text-primary);
+  text-decoration: none !important;
+}
+
+.li-vehicle-meta {
+  font-size: 0.775rem;
+  color: var(--li-text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.li-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.725rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 0.2rem 0.55rem;
+  border-radius: 12px;
+}
+
+.li-badge-available {
+  background-color: var(--li-success-bg);
+  color: var(--li-success);
+}
+.li-badge-rented {
+  background-color: var(--li-warning-bg);
+  color: var(--li-warning);
+}
+.li-badge-maintenance {
+  background-color: var(--li-danger-bg);
+  color: var(--li-danger);
+}
+.li-badge-category {
+  background-color: #f3f2ee;
+  color: var(--li-text-secondary);
+}
+
+/* Vehicle Media Box */
+.li-vehicle-img-wrap {
+  width: 100%;
+  height: 240px;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: #ebebeb;
+  margin: 0.75rem 0 1rem;
+  border: 1px solid var(--li-border);
+}
+
+.li-vehicle-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.li-vehicle-card:hover .li-vehicle-img {
+  transform: scale(1.02);
+}
+
+/* Vehicle Specs Chips */
+.li-specs-row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.li-spec-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background-color: #f8fafc;
+  border: 1px solid var(--li-border-subtle);
+  padding: 0.3rem 0.65rem;
+  border-radius: 6px;
+  font-size: 0.785rem;
+  color: var(--li-text-secondary);
+}
+
+/* Card Action Footer */
+.li-vehicle-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--li-border);
+}
+
+.li-rate-wrap {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+}
+
+.li-rate-curr {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--li-primary);
+}
+
+.li-rate-number {
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: var(--li-text-primary);
+}
+
+.li-rate-period {
+  font-size: 0.8rem;
+  color: var(--li-text-secondary);
+}
+
+.li-card-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* ==========================================================================
+   Right Rail: Info, Announcements & Summary
+   ========================================================================== */
+.li-widget-card {
+  padding: 1rem;
+}
+
+.li-widget-header {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--li-text-primary);
+  margin-bottom: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.li-news-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.li-news-item h4 {
+  font-size: 0.825rem;
+  font-weight: 600;
+  color: var(--li-text-primary);
+  line-height: 1.35;
+}
+
+.li-news-item p {
+  font-size: 0.725rem;
+  color: var(--li-text-tertiary);
+  margin-top: 2px;
+}
+
+.li-course-badge-box {
+  background-color: #f8fafc;
+  border: 1px solid var(--li-border);
+  padding: 0.85rem;
+  border-radius: 6px;
+  font-size: 0.775rem;
+  color: var(--li-text-secondary);
+  margin-top: 1rem;
+}
+
+.li-course-code {
+  font-weight: 700;
+  color: var(--li-primary);
+  display: block;
+}
+
+/* ==========================================================================
+   Loading, Error, Empty States (LinkedIn Style)
+   ========================================================================== */
+.li-state-card {
+  padding: 3rem 1.5rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.li-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid #e0dfdc;
+  border-top-color: var(--li-primary);
+  border-radius: 50%;
+  animation: li-spin 0.8s linear infinite;
+  margin-bottom: 0.85rem;
+}
+
+@keyframes li-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.li-state-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--li-text-primary);
+  margin-bottom: 0.35rem;
+}
+
+.li-state-desc {
+  font-size: 0.825rem;
+  color: var(--li-text-secondary);
+  max-width: 400px;
+  margin-bottom: 1rem;
+}
+
+/* ==========================================================================
+   Car Detail & Booking Page
+   ========================================================================== */
+.li-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  color: var(--li-text-secondary);
+  font-weight: 600;
+  margin-bottom: 1rem;
+  text-decoration: none !important;
+}
+.li-back-btn:hover {
+  color: var(--li-primary);
+}
+
+.li-detail-layout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.li-detail-card {
+  padding: 1.5rem;
+}
+
+.li-detail-hero-img-wrap {
+  width: 100%;
+  height: 340px;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: #f1f5f9;
+  border: 1px solid var(--li-border);
+  margin-bottom: 1.25rem;
+}
+
+.li-detail-hero-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.li-detail-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--li-border);
+}
+
+.li-detail-specs-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.li-detail-spec-box {
+  background-color: #f8fafc;
+  border: 1px solid var(--li-border-subtle);
+  border-radius: 8px;
+  padding: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.li-detail-spec-label {
+  display: block;
+  font-size: 0.725rem;
+  color: var(--li-text-secondary);
+  text-transform: uppercase;
+}
+
+.li-detail-spec-val {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--li-text-primary);
+}
+
+/* Booking Card (Sticky on Right) */
+.li-booking-sidebar {
+  position: sticky;
+  top: 70px;
+}
+
+.li-booking-card {
+  padding: 1.25rem;
+}
+
+.li-booking-card-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--li-text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.li-booking-card-subtitle {
+  font-size: 0.775rem;
+  color: var(--li-text-secondary);
+  margin-bottom: 1rem;
+}
+
+/* Form Groups */
+.li-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 0.85rem;
+}
+
+.li-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--li-text-primary);
+}
+
+.li-input, .li-select, .li-textarea {
+  width: 100%;
+  background-color: #ffffff;
+  border: 1px solid var(--li-border);
+  border-radius: var(--li-radius-input);
+  padding: 0.55rem 0.75rem;
+  font-size: 0.875rem;
+  font-family: inherit;
+  color: var(--li-text-primary);
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.li-input:focus, .li-select:focus, .li-textarea:focus {
+  border-color: var(--li-primary);
+  box-shadow: 0 0 0 2px rgba(10, 102, 194, 0.15);
+}
+
+.li-input-error {
+  border-color: var(--li-danger) !important;
+}
+
+.li-error-msg {
+  font-size: 0.725rem;
+  color: var(--li-danger);
+  font-weight: 600;
+}
+
+.li-price-summary-box {
+  background-color: #f8fafc;
+  border: 1px solid var(--li-border);
+  border-radius: 8px;
+  padding: 0.85rem;
+  margin: 1rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.li-price-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.825rem;
+  color: var(--li-text-secondary);
+}
+
+.li-price-total-row {
+  border-top: 1px dashed var(--li-border);
+  padding-top: 0.45rem;
+  margin-top: 0.25rem;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--li-text-primary);
+}
+
+/* ==========================================================================
+   Auth Pages (LinkedIn Sign In Style)
+   ========================================================================== */
+.li-auth-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 1rem;
+  min-height: calc(100vh - 120px);
+}
+
+.li-auth-brand-head {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin-bottom: 1.5rem;
+  color: var(--li-primary);
+}
+
+.li-auth-card {
+  width: 100%;
+  max-width: 380px;
+  background-color: var(--li-surface);
+  border: 1px solid var(--li-border);
+  border-radius: var(--li-radius-card);
+  box-shadow: var(--li-shadow-card);
+  padding: 1.75rem;
+}
+
+.li-auth-card-wide {
+  max-width: 480px;
+}
+
+.li-auth-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--li-text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.li-auth-subtitle {
+  font-size: 0.825rem;
+  color: var(--li-text-secondary);
+  margin-bottom: 1.25rem;
+}
+
+.li-demo-box {
+  background-color: #f8fafc;
+  border: 1px dashed var(--li-border);
+  border-radius: 8px;
+  padding: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+.li-demo-title {
+  font-size: 0.725rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--li-text-secondary);
+  margin-bottom: 0.5rem;
+}
+
+.li-demo-pills {
+  display: flex;
+  gap: 0.4rem;
+}
+
+/* ==========================================================================
+   Admin Dashboard & Tables
+   ========================================================================== */
+.li-admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+
+.li-admin-tabs {
+  display: flex;
+  gap: 0.5rem;
+  border-bottom: 1px solid var(--li-border);
+  margin-bottom: 1.25rem;
+}
+
+.li-admin-tab-btn {
+  background: transparent;
+  border: none;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--li-text-secondary);
+  padding: 0.65rem 1rem;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s;
+}
+
+.li-admin-tab-btn:hover {
+  color: var(--li-text-primary);
+}
+
+.li-admin-tab-btn.active {
+  color: var(--li-primary);
+  border-bottom-color: var(--li-primary);
+}
+
+.li-table-wrap {
+  overflow-x: auto;
+}
+
+.li-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.li-table th {
+  background-color: #f8fafc;
+  color: var(--li-text-secondary);
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--li-border);
+}
+
+.li-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--li-border-subtle);
+  vertical-align: middle;
+}
+
+.li-table tr:hover {
+  background-color: #fafaf9;
+}
+
+/* Modal */
+.li-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.li-modal-card {
+  background-color: var(--li-surface);
+  border-radius: var(--li-radius-card);
+  width: 100%;
+  max-width: 540px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--li-shadow-popover);
+  padding: 1.5rem;
+}
+
+.li-modal-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+
+/* Footer (LinkedIn Subtle Style) */
+.li-footer {
+  border-top: 1px solid var(--li-border);
+  background-color: var(--li-surface);
+  padding: 1.5rem 1rem;
+  color: var(--li-text-secondary);
+  font-size: 0.775rem;
+  text-align: center;
+}
+
+.li-footer-inner {
+  max-width: 1140px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+/* Alerts */
+.li-alert {
+  padding: 0.65rem 0.85rem;
+  border-radius: 6px;
+  font-size: 0.825rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.li-alert-danger {
+  background-color: var(--li-danger-bg);
+  color: var(--li-danger);
+  border: 1px solid rgba(192, 38, 38, 0.2);
+}
+
+.li-alert-success {
+  background-color: var(--li-success-bg);
+  color: var(--li-success);
+  border: 1px solid rgba(5, 118, 66, 0.2);
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+  .li-grid-layout {
+    grid-template-columns: 200px 1fr;
+  }
+  .li-right-rail {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .li-grid-layout {
+    grid-template-columns: 1fr;
+  }
+  .li-left-rail {
+    display: none;
+  }
+  .li-detail-layout {
+    grid-template-columns: 1fr;
+  }
+  .li-search-box {
+    display: none;
+  }
+}

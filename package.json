@@ -1,0 +1,25 @@
+{
+  "name": "car-rental-management-system",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Car Rental Management System - IT7050 Full Stack Web Development",
+  "scripts": {
+    "server": "npm --prefix backend run dev",
+    "client": "npm --prefix frontend run dev",
+    "seed": "npm --prefix backend run seed",
+    "install:all": "npm --prefix backend install && npm --prefix frontend install"
+  },
+  "keywords": [
+    "react",
+    "vite",
+    "express",
+    "nodejs",
+    "mongodb",
+    "mongoose",
+    "jwt",
+    "car-rental"
+  ],
+  "author": "",
+  "license": "ISC"
+}
+
