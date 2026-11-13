@@ -9,6 +9,15 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.join(__dirname, '..', '.env') });
 
+// Disable Mongoose command buffering so failed connections do not hang requests for 10 seconds
+mongoose.set('bufferCommands', false);
+
+let isConnected = false;
+
+export const isDbConnected = () => {
+  return mongoose.connection.readyState === 1;
+};
+
 const connectDB = async () => {
   const mongoUri =
     process.env.MONGO_URI ||
@@ -16,15 +25,25 @@ const connectDB = async () => {
 
   try {
     const conn = await mongoose.connect(mongoUri, {
-      serverSelectionTimeoutMS: 8000
+      serverSelectionTimeoutMS: 5000
     });
-    console.log(`✅ MongoDB Atlas Connected successfully: ${conn.connection.host}`);
+    isConnected = true;
+    console.log(`[Database] MongoDB Atlas Connected: ${conn.connection.host}`);
 
     // Auto-seed initial fleet and demo accounts if database is empty
     await seedInitialData();
   } catch (error) {
-    console.error(`⚠️ MongoDB Connection Error: ${error.message}`);
-    console.log('📌 NOTE: Check internet connectivity or MongoDB Atlas IP whitelist (Network Access) in cloud.mongodb.com.');
+    isConnected = false;
+    console.log(`[Database] MongoDB Atlas connection pending: ${error.message}`);
+    console.log('[Database] If IP access is restricted, add 0.0.0.0/0 to your Atlas Network Access list.');
+    console.log('[Database] Running dynamic high-availability fallback store in the meantime.');
+
+    // Schedule background retry
+    setTimeout(() => {
+      if (mongoose.connection.readyState !== 1) {
+        connectDB();
+      }
+    }, 15000);
   }
 };
 

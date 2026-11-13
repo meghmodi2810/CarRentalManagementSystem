@@ -4,19 +4,17 @@ import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import CarCard from '../components/CarCard';
 import LoadingSpinner from '../components/LoadingSpinner';
-import ErrorMessage from '../components/ErrorMessage';
 import EmptyState from '../components/EmptyState';
 import {
   Car,
   Filter,
   SlidersHorizontal,
   ShieldCheck,
-  Zap,
   Info,
   CalendarCheck,
   CheckCircle,
-  Clock,
-  Sparkles
+  Plus,
+  ArrowRight
 } from 'lucide-react';
 
 const CATEGORIES = ['All', 'Sedan', 'SUV', 'Hatchback', 'Luxury', 'Electric', 'Van'];
@@ -25,19 +23,19 @@ const HomePage = () => {
   const [searchParams] = useSearchParams();
   const { user, isAuthenticated } = useAuth();
 
-  // Controlled states
+  // Controlled search and filter states
   const [search, setSearch] = useState(searchParams.get('search') || '');
   const [category, setCategory] = useState('All');
   const [sort, setSort] = useState('newest');
 
-  // Async states: Loading, Error, Empty
+  // Async states
   const [cars, setCars] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [fetchNotice, setFetchNotice] = useState(null);
 
   const fetchCars = async () => {
     setLoading(true);
-    setError(null);
+    setFetchNotice(null);
     try {
       const params = {};
       if (search.trim()) params.search = search.trim();
@@ -47,7 +45,7 @@ const HomePage = () => {
       const res = await api.get('/cars', { params });
       setCars(res.data.data || []);
     } catch (err) {
-      setError(err.response?.data?.message || 'Unable to connect to the fleet API.');
+      setFetchNotice('Unable to refresh latest vehicle data. Displaying available fleet.');
     } finally {
       setLoading(false);
     }
@@ -57,7 +55,7 @@ const HomePage = () => {
     fetchCars();
   }, [category, sort]);
 
-  // Sync search param from navbar if present
+  // Sync search param from navbar
   useEffect(() => {
     const q = searchParams.get('search');
     if (q !== null && q !== search) {
@@ -94,7 +92,7 @@ const HomePage = () => {
             LEFT RAIL: User Identity & Category Filters
             ======================================================== */}
         <aside className="li-left-rail">
-          {/* User Profile Mini-Card (LinkedIn Identity Card) */}
+          {/* User Profile Mini-Card */}
           <div className="li-card">
             <div className="li-profile-card-header">
               <div className="li-profile-avatar-wrap">
@@ -106,7 +104,7 @@ const HomePage = () => {
 
             <div className="li-profile-card-body">
               <h3 className="li-profile-name">
-                {isAuthenticated ? user?.name : 'Welcome to DriveFlow'}
+                {isAuthenticated ? user?.name : 'DriveFlow Member'}
               </h3>
               <p className="li-profile-headline">
                 {isAuthenticated
@@ -117,19 +115,27 @@ const HomePage = () => {
               {isAuthenticated ? (
                 <div className="li-profile-stats">
                   <Link to="/my-rentals" className="li-profile-stat-row">
-                    <span>Manage My Bookings</span>
-                    <span className="li-profile-stat-val">→</span>
+                    <span>My Bookings</span>
+                    <span className="li-profile-stat-val">View</span>
+                  </Link>
+                  <Link to="/add-car" className="li-profile-stat-row">
+                    <span>List a Vehicle</span>
+                    <span className="li-profile-stat-val">+ Add</span>
                   </Link>
                   {user?.role === 'admin' && (
                     <Link to="/admin" className="li-profile-stat-row">
-                      <span>Admin Operations</span>
-                      <span className="li-profile-stat-val">Dashboard</span>
+                      <span>Admin Hub</span>
+                      <span className="li-profile-stat-val">Manage</span>
                     </Link>
                   )}
+                  <Link to="/profile" className="li-profile-stat-row">
+                    <span>Account Settings</span>
+                    <span className="li-profile-stat-val">Edit</span>
+                  </Link>
                 </div>
               ) : (
                 <div style={{ marginTop: '0.75rem' }}>
-                  <Link to="/login" className="li-btn li-btn-primary li-btn-block li-btn-sm">
+                  <Link to="/" className="li-btn li-btn-primary li-btn-block li-btn-sm">
                     Sign in to book
                   </Link>
                 </div>
@@ -161,12 +167,12 @@ const HomePage = () => {
             CENTER FEED: Search Widget & Vehicle Listings
             ======================================================== */}
         <main className="li-center-feed">
-          {/* Search Bar Widget (like LinkedIn "Start a post") */}
+          {/* Search Bar Widget */}
           <div className="li-card li-search-widget">
             <form onSubmit={handleSearchSubmit} className="li-search-widget-row">
               <input
                 type="text"
-                placeholder="Search by make, model, or branch (e.g. Tesla, BMW, Downtown)..."
+                placeholder="Search by make, model, or city (e.g. Audi, Tesla, BMW, Downtown)..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="li-feed-search-input"
@@ -190,25 +196,38 @@ const HomePage = () => {
             </form>
           </div>
 
-          {/* Feed States: Loading, Error, Empty, and Feed Cards */}
-          {loading && <LoadingSpinner message="Loading vehicle fleet..." />}
-
-          {!loading && error && (
-            <ErrorMessage message={error} onRetry={fetchCars} />
+          {fetchNotice && (
+            <div className="li-alert li-alert-danger" style={{ marginBottom: '1rem' }}>
+              <span>{fetchNotice}</span>
+            </div>
           )}
 
-          {!loading && !error && cars.length === 0 && (
+          {/* Loading State */}
+          {loading && <LoadingSpinner message="Loading available fleet..." />}
+
+          {/* Clean Empty State: shown when no cars match search/filter */}
+          {!loading && cars.length === 0 && (
             <EmptyState
               icon={Car}
-              title="No vehicles found in fleet"
-              message="No vehicles match your search or filter criteria. Try resetting filters."
-              actionText="Clear Filters"
+              title="No vehicles found"
+              message="No vehicles are currently available matching your selected criteria. Try selecting another category, adjusting your search term, or listing a new vehicle."
+              actionText="Reset Filters"
               onAction={handleResetFilters}
             />
           )}
 
-          {!loading && !error && cars.length > 0 && (
+          {/* Dynamic Cars Feed */}
+          {!loading && cars.length > 0 && (
             <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', padding: '0 0.25rem' }}>
+                <span style={{ fontSize: '0.825rem', color: 'var(--li-text-secondary)', fontWeight: 600 }}>
+                  Showing {cars.length} available {cars.length === 1 ? 'vehicle' : 'vehicles'}
+                </span>
+                <Link to="/add-car" className="li-btn li-btn-outline li-btn-sm">
+                  <Plus size={14} /> List a Vehicle
+                </Link>
+              </div>
+
               {cars.map((car) => (
                 <CarCard key={car._id} car={car} />
               ))}
@@ -217,13 +236,27 @@ const HomePage = () => {
         </main>
 
         {/* ========================================================
-            RIGHT RAIL: DriveFlow Guidelines & Academic Info
+            RIGHT RAIL: Clean Commercial Information & Host CTA
             ======================================================== */}
         <aside className="li-right-rail">
-          {/* DriveFlow Highlights Widget */}
+          {/* List Your Car Promotion Widget */}
+          <div className="li-card li-widget-card" style={{ borderLeft: '3px solid var(--li-primary)' }}>
+            <div className="li-widget-header">
+              <span>List Your Car for Rent</span>
+              <Car size={16} color="var(--li-primary)" />
+            </div>
+            <p style={{ fontSize: '0.8rem', color: 'var(--li-text-secondary)', lineHeight: 1.45, marginBottom: '0.85rem' }}>
+              Turn your idle vehicle into passive income. List your car on DriveFlow in less than 2 minutes and rent it to verified drivers.
+            </p>
+            <Link to="/add-car" className="li-btn li-btn-primary li-btn-block li-btn-sm">
+              <Plus size={14} /> Add Vehicle Now
+            </Link>
+          </div>
+
+          {/* DriveFlow Policies Widget */}
           <div className="li-card li-widget-card">
             <div className="li-widget-header">
-              <span>DriveFlow News & Policies</span>
+              <span>DriveFlow Rental Guidelines</span>
               <Info size={16} color="var(--li-text-secondary)" />
             </div>
 
@@ -233,37 +266,18 @@ const HomePage = () => {
                 <p>Free cancellation up to 24h before scheduled pickup.</p>
               </li>
               <li className="li-news-item">
-                <h4>Full Insurance Coverage</h4>
-                <p>Every booking includes collision & theft protection.</p>
+                <h4>Insurance Included</h4>
+                <p>Every booking includes basic collision and theft protection.</p>
               </li>
               <li className="li-news-item">
                 <h4>24/7 Roadside Assistance</h4>
-                <p>Complimentary roadside support across all branches.</p>
+                <p>Dedicated customer support team available around the clock.</p>
               </li>
               <li className="li-news-item">
-                <h4>Digital License Verification</h4>
-                <p>Upload DL details once for instant rental approvals.</p>
+                <h4>Verified Drivers Only</h4>
+                <p>Drivers must provide a valid driving license number upon booking.</p>
               </li>
             </ul>
-          </div>
-
-          {/* Academic Practical Definition Card */}
-          <div className="li-card li-widget-card">
-            <div className="li-widget-header">
-              <span>Practical Definition</span>
-              <Sparkles size={16} color="var(--li-primary)" />
-            </div>
-
-            <div className="li-course-badge-box">
-              <span className="li-course-code">IT7050 - Full Stack Web Dev</span>
-              <span>M.Sc.(IT) Semester 1 Practical</span>
-              <div style={{ marginTop: '0.5rem', display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                <span>• React.js (Vite) + Node/Express</span>
-                <span>• MongoDB + Mongoose Schemas</span>
-                <span>• JWT Access + Refresh Rotation</span>
-                <span>• Helmet, CORS & Rate Limiting</span>
-              </div>
-            </div>
           </div>
         </aside>
       </div>

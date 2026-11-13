@@ -32,29 +32,29 @@ const carValidation = [
   body('location').trim().notEmpty().withMessage('Location is required')
 ];
 
-// Public routes
+// Car browsing routes
 router.get('/', getCars);
 router.get('/:id', getCarById);
 
-// Admin / Agent protected routes
+// Add vehicle to give on rent (Authenticated users, hosts, agents, admins)
 router.post(
   '/',
   protect,
-  authorizeRoles('admin', 'agent'),
   carValidation,
   validateRequest,
   createCar
 );
 
+// Update vehicle
 router.put(
   '/:id',
   protect,
-  authorizeRoles('admin', 'agent'),
   carValidation,
   validateRequest,
   updateCar
 );
 
+// Delete vehicle (Admin only)
 router.delete(
   '/:id',
   protect,
@@ -63,4 +63,3 @@ router.delete(
 );
 
 export default router;
-

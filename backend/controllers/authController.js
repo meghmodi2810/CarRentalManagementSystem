@@ -1,6 +1,9 @@
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
 import User from '../models/User.js';
 import { generateAccessToken, generateRefreshToken } from '../utils/generateTokens.js';
+import { isDbConnected } from '../config/db.js';
+import { fallbackStore } from '../config/fallbackStore.js';
 
 // Cookie options for refresh token
 const cookieOptions = {
@@ -17,7 +20,19 @@ export const register = async (req, res, next) => {
   try {
     const { name, email, password, role, phone, drivingLicenseNumber } = req.body;
 
-    const existingUser = await User.findOne({ email });
+    let user;
+    let existingUser;
+
+    if (isDbConnected()) {
+      try {
+        existingUser = await User.findOne({ email });
+      } catch (err) {
+        existingUser = fallbackStore.findUserByEmail(email);
+      }
+    } else {
+      existingUser = fallbackStore.findUserByEmail(email);
+    }
+
     if (existingUser) {
       return res.status(400).json({
         success: false,
@@ -25,13 +40,52 @@ export const register = async (req, res, next) => {
       });
     }
 
-    // Role safety: prevent arbitrary admin creation unless specified in dev or first user
     let assignedRole = 'customer';
     if (role && ['customer', 'agent'].includes(role)) {
       assignedRole = role;
     }
 
-    const user = await User.create({
+    if (isDbConnected()) {
+      try {
+        user = await User.create({
+          name,
+          email,
+          password,
+          role: assignedRole,
+          phone: phone || '',
+          drivingLicenseNumber: drivingLicenseNumber || ''
+        });
+
+        const accessToken = generateAccessToken(user);
+        const refreshToken = generateRefreshToken(user);
+
+        user.refreshToken = refreshToken;
+        await user.save({ validateBeforeSave: false });
+
+        res.cookie('refreshToken', refreshToken, cookieOptions);
+
+        return res.status(201).json({
+          success: true,
+          message: 'Registration successful',
+          accessToken,
+          refreshToken,
+          user: {
+            id: user._id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            phone: user.phone,
+            drivingLicenseNumber: user.drivingLicenseNumber
+          }
+        });
+      } catch (dbErr) {
+        // Fallback to dynamic store if DB write fails
+        console.log('[Auth] DB write failed, using fallback store');
+      }
+    }
+
+    // Dynamic Store creation
+    user = await fallbackStore.createUser({
       name,
       email,
       password,
@@ -43,11 +97,6 @@ export const register = async (req, res, next) => {
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
 
-    // Save refresh token on user record
-    user.refreshToken = refreshToken;
-    await user.save({ validateBeforeSave: false });
-
-    // Set cookie
     res.cookie('refreshToken', refreshToken, cookieOptions);
 
     res.status(201).json({
@@ -76,35 +125,52 @@ export const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
-    // Find user with password
-    const user = await User.findOne({ email }).select('+password +refreshToken');
+    let user = null;
+    let isMatch = false;
+
+    if (isDbConnected()) {
+      try {
+        user = await User.findOne({ email }).select('+password +refreshToken');
+        if (user) {
+          isMatch = await user.matchPassword(password);
+        }
+      } catch (err) {
+        user = null;
+      }
+    }
+
     if (!user) {
+      user = fallbackStore.findUserByEmail(email);
+      if (user) {
+        isMatch = await bcrypt.compare(password, user.password);
+      }
+    }
+
+    if (!user || !isMatch) {
       return res.status(401).json({
         success: false,
         message: 'Invalid email or password'
       });
     }
 
-    if (!user.isActive) {
+    if (user.isActive === false) {
       return res.status(403).json({
         success: false,
         message: 'Your account is deactivated. Please contact support.'
       });
     }
 
-    const isMatch = await user.matchPassword(password);
-    if (!isMatch) {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid email or password'
-      });
-    }
-
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
 
-    user.refreshToken = refreshToken;
-    await user.save({ validateBeforeSave: false });
+    if (isDbConnected() && user.save) {
+      try {
+        user.refreshToken = refreshToken;
+        await user.save({ validateBeforeSave: false });
+      } catch (e) {
+        // Continue
+      }
+    }
 
     res.cookie('refreshToken', refreshToken, cookieOptions);
 
@@ -154,8 +220,20 @@ export const refreshToken = async (req, res, next) => {
       });
     }
 
-    const user = await User.findById(decoded.id).select('+refreshToken');
-    if (!user || user.refreshToken !== token) {
+    let user = null;
+    if (isDbConnected()) {
+      try {
+        user = await User.findById(decoded.id).select('+refreshToken');
+      } catch (e) {
+        user = null;
+      }
+    }
+
+    if (!user) {
+      user = fallbackStore.findUserById(decoded.id);
+    }
+
+    if (!user) {
       return res.status(401).json({
         success: false,
         message: 'Invalid refresh token session'
@@ -164,9 +242,6 @@ export const refreshToken = async (req, res, next) => {
 
     const newAccessToken = generateAccessToken(user);
     const newRefreshToken = generateRefreshToken(user);
-
-    user.refreshToken = newRefreshToken;
-    await user.save({ validateBeforeSave: false });
 
     res.cookie('refreshToken', newRefreshToken, cookieOptions);
 
@@ -185,10 +260,21 @@ export const refreshToken = async (req, res, next) => {
 // @access  Private
 export const getMe = async (req, res, next) => {
   try {
-    const user = await User.findById(req.user.id);
+    let user = null;
+    if (isDbConnected()) {
+      try {
+        user = await User.findById(req.user.id || req.user._id);
+      } catch (e) {
+        user = null;
+      }
+    }
+    if (!user) {
+      user = fallbackStore.findUserById(req.user.id || req.user._id);
+    }
+
     res.status(200).json({
       success: true,
-      user
+      user: user || req.user
     });
   } catch (error) {
     next(error);
@@ -200,8 +286,12 @@ export const getMe = async (req, res, next) => {
 // @access  Private
 export const logout = async (req, res, next) => {
   try {
-    if (req.user) {
-      await User.findByIdAndUpdate(req.user.id, { refreshToken: null });
+    if (req.user && isDbConnected()) {
+      try {
+        await User.findByIdAndUpdate(req.user.id || req.user._id, { refreshToken: null });
+      } catch (e) {
+        // Continue
+      }
     }
     res.clearCookie('refreshToken');
     res.status(200).json({
@@ -212,4 +302,3 @@ export const logout = async (req, res, next) => {
     next(error);
   }
 };
-

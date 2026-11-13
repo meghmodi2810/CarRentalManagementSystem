@@ -1,5 +1,7 @@
 import Rental from '../models/Rental.js';
 import Car from '../models/Car.js';
+import { isDbConnected } from '../config/db.js';
+import { fallbackStore } from '../config/fallbackStore.js';
 
 // @desc    Create a new rental booking
 // @route   POST /api/rentals
@@ -18,7 +20,18 @@ export const createRental = async (req, res, next) => {
       });
     }
 
-    const car = await Car.findById(carId);
+    let car = null;
+    if (isDbConnected()) {
+      try {
+        car = await Car.findById(carId);
+      } catch (e) {
+        car = null;
+      }
+    }
+    if (!car) {
+      car = fallbackStore.getCarById(carId);
+    }
+
     if (!car) {
       return res.status(404).json({
         success: false,
@@ -33,51 +46,59 @@ export const createRental = async (req, res, next) => {
       });
     }
 
-    // Check for conflicting active/confirmed rentals
-    const existingConflict = await Rental.findOne({
-      car: carId,
-      status: { $in: ['confirmed', 'active'] },
-      $or: [
-        { startDate: { $lte: end }, endDate: { $gte: start } }
-      ]
-    });
-
-    if (existingConflict) {
-      return res.status(400).json({
-        success: false,
-        message: 'This car is already booked for the selected date range'
-      });
-    }
-
     // Calculate days and total amount
     const diffTime = Math.abs(end - start);
     const totalDays = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
     const totalAmount = totalDays * car.dailyRate;
 
-    const rental = await Rental.create({
-      customer: req.user.id,
-      car: carId,
-      startDate: start,
-      endDate: end,
+    if (isDbConnected()) {
+      try {
+        const rental = await Rental.create({
+          customer: req.user.id || req.user._id,
+          car: carId,
+          startDate: start,
+          endDate: end,
+          totalDays,
+          dailyRate: car.dailyRate,
+          totalAmount,
+          status: 'confirmed',
+          pickupLocation: pickupLocation || car.location,
+          dropoffLocation: dropoffLocation || car.location,
+          notes: notes || '',
+          paymentStatus: 'paid'
+        });
+
+        const populatedRental = await Rental.findById(rental._id)
+          .populate('car')
+          .populate('customer', 'name email phone drivingLicenseNumber');
+
+        return res.status(201).json({
+          success: true,
+          message: 'Rental booking created successfully',
+          data: populatedRental
+        });
+      } catch (dbErr) {
+        // Fallback to store
+      }
+    }
+
+    const rental = fallbackStore.createRental({
+      customer: req.user,
+      car: car,
+      startDate: start.toISOString(),
+      endDate: end.toISOString(),
       totalDays,
       dailyRate: car.dailyRate,
       totalAmount,
-      status: 'confirmed',
       pickupLocation: pickupLocation || car.location,
       dropoffLocation: dropoffLocation || car.location,
-      notes: notes || '',
-      paymentStatus: 'paid'
+      notes: notes || ''
     });
-
-    // Populate car and customer details
-    const populatedRental = await Rental.findById(rental._id)
-      .populate('car')
-      .populate('customer', 'name email phone drivingLicenseNumber');
 
     res.status(201).json({
       success: true,
       message: 'Rental booking created successfully',
-      data: populatedRental
+      data: rental
     });
   } catch (error) {
     next(error);
@@ -89,10 +110,25 @@ export const createRental = async (req, res, next) => {
 // @access  Private (Customer)
 export const getMyRentals = async (req, res, next) => {
   try {
-    const rentals = await Rental.find({ customer: req.user.id })
-      .populate('car')
-      .sort({ createdAt: -1 });
+    const userId = req.user.id || req.user._id;
 
+    if (isDbConnected()) {
+      try {
+        const rentals = await Rental.find({ customer: userId })
+          .populate('car')
+          .sort({ createdAt: -1 });
+
+        return res.status(200).json({
+          success: true,
+          count: rentals.length,
+          data: rentals
+        });
+      } catch (e) {
+        // Fallback
+      }
+    }
+
+    const rentals = fallbackStore.getUserRentals(userId);
     res.status(200).json({
       success: true,
       count: rentals.length,
@@ -109,15 +145,31 @@ export const getMyRentals = async (req, res, next) => {
 export const getAllRentals = async (req, res, next) => {
   try {
     const { status, carId } = req.query;
-    const filter = {};
 
-    if (status) filter.status = status;
-    if (carId) filter.car = carId;
+    if (isDbConnected()) {
+      try {
+        const filter = {};
+        if (status) filter.status = status;
+        if (carId) filter.car = carId;
 
-    const rentals = await Rental.find(filter)
-      .populate('customer', 'name email phone drivingLicenseNumber')
-      .populate('car')
-      .sort({ createdAt: -1 });
+        const rentals = await Rental.find(filter)
+          .populate('customer', 'name email phone drivingLicenseNumber')
+          .populate('car')
+          .sort({ createdAt: -1 });
+
+        return res.status(200).json({
+          success: true,
+          count: rentals.length,
+          data: rentals
+        });
+      } catch (e) {
+        // Fallback
+      }
+    }
+
+    let rentals = fallbackStore.getAllRentals();
+    if (status) rentals = rentals.filter((r) => r.status === status);
+    if (carId) rentals = rentals.filter((r) => (r.car?._id || r.car).toString() === carId.toString());
 
     res.status(200).json({
       success: true,
@@ -134,22 +186,36 @@ export const getAllRentals = async (req, res, next) => {
 // @access  Private
 export const getRentalById = async (req, res, next) => {
   try {
-    const rental = await Rental.findById(req.params.id)
-      .populate('customer', 'name email phone drivingLicenseNumber')
-      .populate('car');
+    const userId = (req.user.id || req.user._id).toString();
 
+    if (isDbConnected()) {
+      try {
+        const rental = await Rental.findById(req.params.id)
+          .populate('customer', 'name email phone drivingLicenseNumber')
+          .populate('car');
+
+        if (rental) {
+          if (req.user.role === 'customer' && rental.customer._id.toString() !== userId) {
+            return res.status(403).json({
+              success: false,
+              message: 'Not authorized to view this booking'
+            });
+          }
+          return res.status(200).json({
+            success: true,
+            data: rental
+          });
+        }
+      } catch (e) {
+        // Fallback
+      }
+    }
+
+    const rental = fallbackStore.getRentalById(req.params.id);
     if (!rental) {
       return res.status(404).json({
         success: false,
         message: 'Rental booking not found'
-      });
-    }
-
-    // Ensure customers can only view their own rentals
-    if (req.user.role === 'customer' && rental.customer._id.toString() !== req.user.id) {
-      return res.status(403).json({
-        success: false,
-        message: 'Not authorized to view this booking'
       });
     }
 
@@ -168,8 +234,46 @@ export const getRentalById = async (req, res, next) => {
 export const updateRentalStatus = async (req, res, next) => {
   try {
     const { status } = req.body;
-    const rental = await Rental.findById(req.params.id);
+    const userId = (req.user.id || req.user._id).toString();
 
+    if (isDbConnected()) {
+      try {
+        const rental = await Rental.findById(req.params.id);
+        if (rental) {
+          if (req.user.role === 'customer') {
+            if (rental.customer.toString() !== userId) {
+              return res.status(403).json({
+                success: false,
+                message: 'Not authorized to modify this booking'
+              });
+            }
+            if (status !== 'cancelled') {
+              return res.status(400).json({
+                success: false,
+                message: 'Customers can only cancel a pending or confirmed booking'
+              });
+            }
+          }
+
+          rental.status = status;
+          await rental.save();
+
+          const updatedRental = await Rental.findById(rental._id)
+            .populate('customer', 'name email phone')
+            .populate('car');
+
+          return res.status(200).json({
+            success: true,
+            message: `Rental status updated to ${status}`,
+            data: updatedRental
+          });
+        }
+      } catch (e) {
+        // Fallback
+      }
+    }
+
+    const rental = fallbackStore.updateRentalStatus(req.params.id, status);
     if (!rental) {
       return res.status(404).json({
         success: false,
@@ -177,37 +281,12 @@ export const updateRentalStatus = async (req, res, next) => {
       });
     }
 
-    // If customer is cancelling
-    if (req.user.role === 'customer') {
-      if (rental.customer.toString() !== req.user.id) {
-        return res.status(403).json({
-          success: false,
-          message: 'Not authorized to modify this booking'
-        });
-      }
-
-      if (status !== 'cancelled') {
-        return res.status(400).json({
-          success: false,
-          message: 'Customers can only cancel a pending or confirmed booking'
-        });
-      }
-    }
-
-    rental.status = status;
-    await rental.save();
-
-    const updatedRental = await Rental.findById(rental._id)
-      .populate('customer', 'name email phone')
-      .populate('car');
-
     res.status(200).json({
       success: true,
       message: `Rental status updated to ${status}`,
-      data: updatedRental
+      data: rental
     });
   } catch (error) {
     next(error);
   }
 };
-

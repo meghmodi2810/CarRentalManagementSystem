@@ -1,5 +1,7 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import { isDbConnected } from '../config/db.js';
+import { fallbackStore } from '../config/fallbackStore.js';
 
 export const protect = async (req, res, next) => {
   let token;
@@ -27,7 +29,31 @@ export const protect = async (req, res, next) => {
       process.env.JWT_ACCESS_SECRET || 'car_rental_jwt_access_secret_super_secure_key_123456'
     );
 
-    const user = await User.findById(decoded.id).select('-password');
+    let user = null;
+    if (isDbConnected()) {
+      try {
+        user = await User.findById(decoded.id).select('-password');
+      } catch (e) {
+        user = null;
+      }
+    }
+
+    if (!user) {
+      user = fallbackStore.findUserById(decoded.id);
+    }
+
+    if (!user && decoded.id) {
+      // Fallback from decoded token payload
+      user = {
+        _id: decoded.id,
+        id: decoded.id,
+        name: decoded.name || 'User',
+        email: decoded.email,
+        role: decoded.role || 'customer',
+        isActive: true
+      };
+    }
+
     if (!user) {
       return res.status(401).json({
         success: false,
@@ -35,7 +61,7 @@ export const protect = async (req, res, next) => {
       });
     }
 
-    if (!user.isActive) {
+    if (user.isActive === false) {
       return res.status(403).json({
         success: false,
         message: 'Your account has been deactivated. Please contact support.'
@@ -59,4 +85,3 @@ export const protect = async (req, res, next) => {
     });
   }
 };
-

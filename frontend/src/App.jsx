@@ -9,8 +9,10 @@ import ProtectedRoute from './components/ProtectedRoute';
 import AuthLandingPage from './pages/AuthLandingPage';
 import HomePage from './pages/HomePage';
 import CarDetailPage from './pages/CarDetailPage';
+import AddVehiclePage from './pages/AddVehiclePage';
 import MyRentalsPage from './pages/MyRentalsPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
+import ProfilePage from './pages/ProfilePage';
 import NotFoundPage from './pages/NotFoundPage';
 
 function App() {
@@ -21,16 +23,36 @@ function App() {
           <Navbar />
           <main className="main-content">
             <Routes>
-              {/* FIRST PAGE: Login & Signup Landing Page */}
+              {/* FIRST PAGE: Login & Signup Gateway (Public) */}
               <Route path="/" element={<AuthLandingPage />} />
               <Route path="/login" element={<AuthLandingPage />} />
               <Route path="/register" element={<AuthLandingPage />} />
 
-              {/* Fleet Browsing Page */}
-              <Route path="/fleet" element={<HomePage />} />
-              <Route path="/cars/:id" element={<CarDetailPage />} />
-
-              {/* Protected Customer Routes */}
+              {/* ALL PORTAL FEATURES ARE STRICTLY PROTECTED BEHIND LOGIN */}
+              <Route
+                path="/fleet"
+                element={
+                  <ProtectedRoute>
+                    <HomePage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/cars/:id"
+                element={
+                  <ProtectedRoute>
+                    <CarDetailPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/add-car"
+                element={
+                  <ProtectedRoute>
+                    <AddVehiclePage />
+                  </ProtectedRoute>
+                }
+              />
               <Route
                 path="/my-rentals"
                 element={
@@ -39,8 +61,14 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-
-              {/* Protected Admin Routes */}
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <ProfilePage />
+                  </ProtectedRoute>
+                }
+              />
               <Route
                 path="/admin"
                 element={

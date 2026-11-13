@@ -17,11 +17,11 @@ export const seedInitialData = async () => {
   try {
     const carCount = await Car.countDocuments();
     if (carCount > 0) {
-      console.log(`ℹ️ Database already contains ${carCount} cars. Skipping duplicate seed.`);
+      console.log(`[Seed] Database already contains ${carCount} cars. Skipping duplicate seed.`);
       return;
     }
 
-    console.log('🌱 Seeding initial demo cars and users into MongoDB Atlas...');
+    console.log('[Seed] Seeding initial fleet cars and users into MongoDB...');
 
     // 1. Create Users
     const adminUser = await User.create({
@@ -42,9 +42,7 @@ export const seedInitialData = async () => {
       drivingLicenseNumber: 'DL-NY-847291'
     });
 
-    console.log('✅ Users created in database:');
-    console.log('   - Admin: admin@carrental.com / adminpassword123');
-    console.log('   - Customer: alex@example.com / password123');
+    console.log('[Seed] Created users: admin@carrental.com and alex@example.com');
 
     // 2. Create Cars
     const cars = await Car.insertMany([
@@ -146,7 +144,7 @@ export const seedInitialData = async () => {
       }
     ]);
 
-    console.log(`✅ Seeded ${cars.length} cars into MongoDB Atlas.`);
+    console.log(`[Seed] Seeded ${cars.length} vehicles into database.`);
 
     // 3. Create Sample Booking
     const today = new Date();
@@ -171,29 +169,29 @@ export const seedInitialData = async () => {
       notes: 'Initial test reservation for customer Alex Johnson'
     });
 
-    console.log('✅ Sample booking created successfully in MongoDB Atlas.');
+    console.log('[Seed] Sample booking created successfully.');
   } catch (error) {
-    console.error('Error seeding data:', error.message);
+    console.error('[Seed] Error seeding data:', error.message);
   }
 };
 
 // Standalone execution
 if (process.argv[1] && process.argv[1].endsWith('seed.js')) {
   const uri = process.env.MONGO_URI || ATLAS_FALLBACK_URI;
-  console.log('Connecting to MongoDB Atlas...');
+  console.log('[Seed] Connecting to MongoDB...');
   mongoose
     .connect(uri, { serverSelectionTimeoutMS: 8000 })
     .then(async () => {
-      console.log('Connected! Resetting collections for fresh seed...');
+      console.log('[Seed] Connected. Resetting collections...');
       await Rental.deleteMany();
       await Car.deleteMany();
       await User.deleteMany();
       await seedInitialData();
-      console.log('🎉 Seeding completed successfully!');
+      console.log('[Seed] Seeding completed.');
       process.exit(0);
     })
     .catch((err) => {
-      console.error('Connection error:', err.message);
+      console.error('[Seed] Connection error:', err.message);
       process.exit(1);
     });
 }
