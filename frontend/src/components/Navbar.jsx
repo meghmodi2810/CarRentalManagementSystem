@@ -47,13 +47,15 @@ const Navbar = () => {
             <span>Fleet</span>
           </NavLink>
 
-          <NavLink
-            to="/add-car"
-            className={({ isActive }) => `li-nav-item ${isActive ? 'active' : ''}`}
-          >
-            <PlusCircle size={18} />
-            <span>List Car</span>
-          </NavLink>
+          {isAuthenticated && (
+            <NavLink
+              to="/add-car"
+              className={({ isActive }) => `li-nav-item ${isActive ? 'active' : ''}`}
+            >
+              <PlusCircle size={18} />
+              <span>List Car</span>
+            </NavLink>
+          )}
 
           {isAuthenticated && (
             <NavLink

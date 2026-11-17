@@ -226,9 +226,11 @@ const HomePage = () => {
                 <span style={{ fontSize: '0.825rem', color: 'var(--li-text-secondary)', fontWeight: 600 }}>
                   Showing {cars.length} available {cars.length === 1 ? 'vehicle' : 'vehicles'}
                 </span>
-                <Link to="/add-car" className="li-btn li-btn-outline li-btn-sm">
-                  <Plus size={14} /> List a Vehicle
-                </Link>
+                {isAuthenticated && (
+                  <Link to="/add-car" className="li-btn li-btn-outline li-btn-sm">
+                    <Plus size={14} /> List a Vehicle
+                  </Link>
+                )}
               </div>
 
               {cars.map((car) => (
@@ -242,19 +244,21 @@ const HomePage = () => {
             RIGHT RAIL: Clean Commercial Information & Host CTA
             ======================================================== */}
         <aside className="li-right-rail">
-          {/* List Your Car Promotion Widget */}
-          <div className="li-card li-widget-card" style={{ borderLeft: '3px solid var(--li-primary)' }}>
-            <div className="li-widget-header">
-              <span>List Your Car for Rent</span>
-              <Car size={16} color="var(--li-primary)" />
+          {/* List Your Car Promotion Widget - ONLY SHOWN WHEN LOGGED IN */}
+          {isAuthenticated && (
+            <div className="li-card li-widget-card" style={{ borderLeft: '3px solid var(--li-primary)' }}>
+              <div className="li-widget-header">
+                <span>List Your Car for Rent</span>
+                <Car size={16} color="var(--li-primary)" />
+              </div>
+              <p style={{ fontSize: '0.8rem', color: 'var(--li-text-secondary)', lineHeight: 1.45, marginBottom: '0.85rem' }}>
+                Turn your idle vehicle into passive income. List your car on DriveFlow in less than 2 minutes and rent it to verified drivers.
+              </p>
+              <Link to="/add-car" className="li-btn li-btn-primary li-btn-block li-btn-sm">
+                <Plus size={14} /> Add Vehicle Now
+              </Link>
             </div>
-            <p style={{ fontSize: '0.8rem', color: 'var(--li-text-secondary)', lineHeight: 1.45, marginBottom: '0.85rem' }}>
-              Turn your idle vehicle into passive income. List your car on DriveFlow in less than 2 minutes and rent it to verified drivers.
-            </p>
-            <Link to="/add-car" className="li-btn li-btn-primary li-btn-block li-btn-sm">
-              <Plus size={14} /> Add Vehicle Now
-            </Link>
-          </div>
+          )}
 
           {/* DriveFlow Policies Widget */}
           <div className="li-card li-widget-card">

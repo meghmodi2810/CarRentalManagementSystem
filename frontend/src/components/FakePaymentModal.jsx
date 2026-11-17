@@ -320,3 +320,4 @@ const FakePaymentModal = ({ isOpen, onClose, amount, carTitle, onPaymentSuccess 
 };
 
 export default FakePaymentModal;
+

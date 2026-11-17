@@ -31,3 +31,4 @@ export const CATEGORY_PLACEHOLDERS = {
 export const getPlaceholderForCategory = (category) => {
   return CATEGORY_PLACEHOLDERS[category]?.svg || CATEGORY_PLACEHOLDERS.Sedan.svg;
 };
+
