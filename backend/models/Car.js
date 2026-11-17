@@ -84,6 +84,16 @@ const carSchema = new mongoose.Schema(
       required: [true, 'Please provide the car branch / location'],
       trim: true,
       index: true
+    },
+    owner: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+      index: true
+    },
+    ownerName: {
+      type: String,
+      default: ''
     }
   },
   {

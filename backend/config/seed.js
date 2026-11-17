@@ -55,12 +55,14 @@ export const seedInitialData = async () => {
         transmission: 'Automatic',
         fuelType: 'Electric',
         seatingCapacity: 5,
-        dailyRate: 95,
+        dailyRate: 4500,
         status: 'available',
         mileage: 8200,
         imageUrl: 'https://images.unsplash.com/photo-1560958089-b8a1929cea89?auto=format&fit=crop&w=1000&q=80',
         features: ['Autopilot', 'Navigation', 'Heated Seats', 'Glass Roof', 'Bluetooth'],
-        location: 'Downtown Hub'
+        location: 'Downtown Hub',
+        owner: adminUser._id,
+        ownerName: 'System Admin'
       },
       {
         make: 'BMW',
@@ -71,12 +73,14 @@ export const seedInitialData = async () => {
         transmission: 'Automatic',
         fuelType: 'Petrol',
         seatingCapacity: 5,
-        dailyRate: 120,
+        dailyRate: 7500,
         status: 'available',
         mileage: 15400,
         imageUrl: 'https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=1000&q=80',
         features: ['Leather Seats', 'Sunroof', 'Harman Kardon Audio', 'Parking Assist'],
-        location: 'Airport Terminal 1'
+        location: 'Airport Terminal 1',
+        owner: adminUser._id,
+        ownerName: 'System Admin'
       },
       {
         make: 'Toyota',
@@ -87,12 +91,14 @@ export const seedInitialData = async () => {
         transmission: 'Automatic',
         fuelType: 'Hybrid',
         seatingCapacity: 5,
-        dailyRate: 75,
+        dailyRate: 3500,
         status: 'available',
         mileage: 22000,
         imageUrl: 'https://images.unsplash.com/photo-1568844293986-8d0400bd4745?auto=format&fit=crop&w=1000&q=80',
         features: ['All-Wheel Drive', 'Apple CarPlay', 'Adaptive Cruise', 'Backup Camera'],
-        location: 'Downtown Hub'
+        location: 'Downtown Hub',
+        owner: customerUser._id,
+        ownerName: 'Alex Johnson'
       },
       {
         make: 'Mercedes-Benz',
@@ -103,12 +109,14 @@ export const seedInitialData = async () => {
         transmission: 'Automatic',
         fuelType: 'Petrol',
         seatingCapacity: 5,
-        dailyRate: 110,
+        dailyRate: 6500,
         status: 'available',
         mileage: 9100,
         imageUrl: 'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&w=1000&q=80',
         features: ['Digital Cockpit', 'Ambient Lighting', 'Surround Sound', 'Blind Spot Assist'],
-        location: 'Uptown Branch'
+        location: 'Uptown Branch',
+        owner: adminUser._id,
+        ownerName: 'System Admin'
       },
       {
         make: 'Volkswagen',
@@ -119,12 +127,14 @@ export const seedInitialData = async () => {
         transmission: 'Manual',
         fuelType: 'Petrol',
         seatingCapacity: 5,
-        dailyRate: 50,
+        dailyRate: 2200,
         status: 'available',
         mileage: 31000,
         imageUrl: 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=1000&q=80',
         features: ['Eco Mode', 'Touchscreen Infotainment', 'Isofix', 'Cruise Control'],
-        location: 'Downtown Hub'
+        location: 'Downtown Hub',
+        owner: customerUser._id,
+        ownerName: 'Alex Johnson'
       },
       {
         make: 'Ford',
@@ -135,12 +145,14 @@ export const seedInitialData = async () => {
         transmission: 'Automatic',
         fuelType: 'Diesel',
         seatingCapacity: 12,
-        dailyRate: 135,
+        dailyRate: 4800,
         status: 'available',
         mileage: 18500,
         imageUrl: 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=1000&q=80',
         features: ['High Roof', 'Luggage Space', 'Rear AC', 'Reverse Camera'],
-        location: 'Airport Terminal 1'
+        location: 'Airport Terminal 1',
+        owner: adminUser._id,
+        ownerName: 'System Admin'
       }
     ]);
 

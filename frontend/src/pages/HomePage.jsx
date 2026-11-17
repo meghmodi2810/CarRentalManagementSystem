@@ -134,9 +134,12 @@ const HomePage = () => {
                   </Link>
                 </div>
               ) : (
-                <div style={{ marginTop: '0.75rem' }}>
-                  <Link to="/" className="li-btn li-btn-primary li-btn-block li-btn-sm">
+                <div style={{ marginTop: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                  <Link to="/login" className="li-btn li-btn-primary li-btn-block li-btn-sm">
                     Sign in to book
+                  </Link>
+                  <Link to="/register" className="li-btn li-btn-subtle li-btn-block li-btn-sm">
+                    Create account
                   </Link>
                 </div>
               )}

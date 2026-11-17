@@ -46,35 +46,55 @@ export const createRental = async (req, res, next) => {
       });
     }
 
+    const userId = (req.user.id || req.user._id).toString();
+    const carOwnerId = (car.owner?._id || car.owner)?.toString();
+
+    // Prevent user from booking their own listed vehicle
+    if (carOwnerId && carOwnerId === userId) {
+      return res.status(400).json({
+        success: false,
+        message: 'You listed this vehicle. You cannot rent your own vehicle.'
+      });
+    }
+
     // Calculate days and total amount
     const diffTime = Math.abs(end - start);
     const totalDays = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
     const totalAmount = totalDays * car.dailyRate;
 
+    const fakePayment = {
+      transactionId: req.body.paymentDetails?.transactionId || 'TXN-' + Math.floor(10000000 + Math.random() * 90000000),
+      method: req.body.paymentMethod || 'UPI',
+      paidAt: new Date()
+    };
+
     if (isDbConnected()) {
       try {
         const rental = await Rental.create({
-          customer: req.user.id || req.user._id,
+          customer: userId,
           car: carId,
+          host: carOwnerId || null,
           startDate: start,
           endDate: end,
           totalDays,
           dailyRate: car.dailyRate,
           totalAmount,
-          status: 'confirmed',
+          status: 'pending', // Starts as pending until host accepts
           pickupLocation: pickupLocation || car.location,
           dropoffLocation: dropoffLocation || car.location,
           notes: notes || '',
-          paymentStatus: 'paid'
+          paymentStatus: 'paid',
+          paymentDetails: fakePayment
         });
 
         const populatedRental = await Rental.findById(rental._id)
           .populate('car')
-          .populate('customer', 'name email phone drivingLicenseNumber');
+          .populate('customer', 'name email phone drivingLicenseNumber')
+          .populate('host', 'name email phone');
 
         return res.status(201).json({
           success: true,
-          message: 'Rental booking created successfully',
+          message: 'Rental request submitted to host successfully',
           data: populatedRental
         });
       } catch (dbErr) {
@@ -92,12 +112,14 @@ export const createRental = async (req, res, next) => {
       totalAmount,
       pickupLocation: pickupLocation || car.location,
       dropoffLocation: dropoffLocation || car.location,
-      notes: notes || ''
+      notes: notes || '',
+      paymentDetails: fakePayment,
+      paymentMethod: fakePayment.method
     });
 
     res.status(201).json({
       success: true,
-      message: 'Rental booking created successfully',
+      message: 'Rental request submitted to host successfully',
       data: rental
     });
   } catch (error) {
@@ -228,25 +250,72 @@ export const getRentalById = async (req, res, next) => {
   }
 };
 
-// @desc    Update rental status (Admin / Agent or cancel by Customer)
+// @desc    Get rental requests for vehicles listed by currently logged-in host
+// @route   GET /api/rentals/host-requests
+// @access  Private (Host / Owner)
+export const getHostRentals = async (req, res, next) => {
+  try {
+    const userId = (req.user.id || req.user._id).toString();
+
+    if (isDbConnected()) {
+      try {
+        const myCars = await Car.find({ owner: userId }).select('_id');
+        const carIds = myCars.map((c) => c._id);
+
+        const rentals = await Rental.find({
+          $or: [{ host: userId }, { car: { $in: carIds } }]
+        })
+          .populate('car')
+          .populate('customer', 'name email phone drivingLicenseNumber')
+          .sort({ createdAt: -1 });
+
+        return res.status(200).json({
+          success: true,
+          count: rentals.length,
+          data: rentals
+        });
+      } catch (e) {
+        // Fallback
+      }
+    }
+
+    const rentals = fallbackStore.getHostRentals(userId);
+    res.status(200).json({
+      success: true,
+      count: rentals.length,
+      data: rentals
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Update rental status (Admin / Host accept-reject / Customer cancel)
 // @route   PATCH /api/rentals/:id/status
 // @access  Private
 export const updateRentalStatus = async (req, res, next) => {
   try {
     const { status } = req.body;
     const userId = (req.user.id || req.user._id).toString();
+    const isAdmin = req.user.role === 'admin';
 
     if (isDbConnected()) {
       try {
-        const rental = await Rental.findById(req.params.id);
+        const rental = await Rental.findById(req.params.id).populate('car');
         if (rental) {
-          if (req.user.role === 'customer') {
-            if (rental.customer.toString() !== userId) {
-              return res.status(403).json({
-                success: false,
-                message: 'Not authorized to modify this booking'
-              });
-            }
+          const isCustomer = (rental.customer?._id || rental.customer).toString() === userId;
+          const carOwnerId = (rental.car?.owner?._id || rental.car?.owner)?.toString();
+          const hostId = (rental.host?._id || rental.host)?.toString();
+          const isHost = hostId === userId || carOwnerId === userId;
+
+          if (!isAdmin && !isHost && !isCustomer) {
+            return res.status(403).json({
+              success: false,
+              message: 'Not authorized to modify this booking'
+            });
+          }
+
+          if (isCustomer && !isHost && !isAdmin) {
             if (status !== 'cancelled') {
               return res.status(400).json({
                 success: false,
@@ -255,7 +324,17 @@ export const updateRentalStatus = async (req, res, next) => {
             }
           }
 
+          if (isHost && !isAdmin && !['confirmed', 'cancelled'].includes(status)) {
+            return res.status(400).json({
+              success: false,
+              message: 'Vehicle hosts can accept (confirmed) or decline (cancelled) requests'
+            });
+          }
+
           rental.status = status;
+          if (status === 'cancelled') {
+            rental.paymentStatus = 'refunded';
+          }
           await rental.save();
 
           const updatedRental = await Rental.findById(rental._id)

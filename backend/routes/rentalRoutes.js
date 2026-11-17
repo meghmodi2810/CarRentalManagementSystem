@@ -3,6 +3,7 @@ import { body } from 'express-validator';
 import {
   createRental,
   getMyRentals,
+  getHostRentals,
   getAllRentals,
   getRentalById,
   updateRentalStatus
@@ -22,9 +23,10 @@ const rentalValidation = [
 // All rental routes are protected
 router.use(protect);
 
-// Customer endpoints
+// Customer & Host endpoints
 router.post('/', rentalValidation, validateRequest, createRental);
 router.get('/my-rentals', getMyRentals);
+router.get('/host-requests', getHostRentals);
 
 // Admin / Agent endpoints
 router.get('/', authorizeRoles('admin', 'agent'), getAllRentals);

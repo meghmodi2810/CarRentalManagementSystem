@@ -64,7 +64,7 @@ export const getCars = async (req, res, next) => {
           }
         }
 
-        let queryBuilder = Car.find(query);
+        let queryBuilder = Car.find(query).populate('owner', 'name email phone');
 
         if (sort === 'price_asc') {
           queryBuilder = queryBuilder.sort({ dailyRate: 1 });
@@ -115,7 +115,7 @@ export const getCarById = async (req, res, next) => {
   try {
     if (isDbConnected()) {
       try {
-        const car = await Car.findById(req.params.id);
+        const car = await Car.findById(req.params.id).populate('owner', 'name email phone');
         if (car) {
           return res.status(200).json({
             success: true,
@@ -149,9 +149,15 @@ export const getCarById = async (req, res, next) => {
 // @access  Private (Authenticated users / Hosts / Admins)
 export const createCar = async (req, res, next) => {
   try {
+    const carData = {
+      ...req.body,
+      owner: req.user?.id || req.user?._id || null,
+      ownerName: req.user?.name || 'DriveFlow Host'
+    };
+
     if (isDbConnected()) {
       try {
-        const car = await Car.create(req.body);
+        const car = await Car.create(carData);
         return res.status(201).json({
           success: true,
           message: 'Vehicle listed successfully',
@@ -162,7 +168,7 @@ export const createCar = async (req, res, next) => {
       }
     }
 
-    const car = fallbackStore.createCar(req.body);
+    const car = fallbackStore.createCar(carData);
     res.status(201).json({
       success: true,
       message: 'Vehicle listed successfully',
@@ -178,8 +184,20 @@ export const createCar = async (req, res, next) => {
 // @access  Private
 export const updateCar = async (req, res, next) => {
   try {
+    const userId = (req.user?.id || req.user?._id || '').toString();
+    const isAdmin = req.user?.role === 'admin';
+
     if (isDbConnected()) {
       try {
+        const existingCar = await Car.findById(req.params.id);
+        if (!existingCar) {
+          return res.status(404).json({ success: false, message: 'Car not found' });
+        }
+        const ownerId = (existingCar.owner?._id || existingCar.owner)?.toString();
+        if (!isAdmin && ownerId && ownerId !== userId) {
+          return res.status(403).json({ success: false, message: 'Not authorized to update this vehicle listing' });
+        }
+
         const car = await Car.findByIdAndUpdate(req.params.id, req.body, {
           new: true,
           runValidators: true
@@ -215,23 +233,56 @@ export const updateCar = async (req, res, next) => {
   }
 };
 
-// @desc    Delete car
+// @desc    Delete car (Owner or Admin)
 // @route   DELETE /api/cars/:id
 // @access  Private
 export const deleteCar = async (req, res, next) => {
   try {
+    const userId = (req.user?.id || req.user?._id || '').toString();
+    const isAdmin = req.user?.role === 'admin';
+
     if (isDbConnected()) {
       try {
-        const car = await Car.findByIdAndDelete(req.params.id);
-        if (car) {
-          return res.status(200).json({
-            success: true,
-            message: 'Vehicle removed successfully'
+        const car = await Car.findById(req.params.id);
+        if (!car) {
+          return res.status(404).json({ success: false, message: 'Car not found' });
+        }
+
+        const ownerId = (car.owner?._id || car.owner)?.toString();
+        if (!isAdmin && ownerId && ownerId !== userId) {
+          return res.status(403).json({
+            success: false,
+            message: 'You are not authorized to delete this vehicle listing.'
           });
         }
+
+        await Car.findByIdAndDelete(req.params.id);
+        // Also cancel any pending rentals for this car
+        await Rental.updateMany(
+          { car: req.params.id, status: 'pending' },
+          { status: 'cancelled' }
+        );
+
+        return res.status(200).json({
+          success: true,
+          message: 'Vehicle listing removed successfully'
+        });
       } catch (e) {
         // Continue
       }
+    }
+
+    const existingCar = fallbackStore.getCarById(req.params.id);
+    if (!existingCar) {
+      return res.status(404).json({ success: false, message: 'Car not found' });
+    }
+
+    const ownerId = (existingCar.owner?._id || existingCar.owner)?.toString();
+    if (!isAdmin && ownerId && ownerId !== userId) {
+      return res.status(403).json({
+        success: false,
+        message: 'You are not authorized to delete this vehicle listing.'
+      });
     }
 
     const success = fallbackStore.deleteCar(req.params.id);
@@ -244,7 +295,7 @@ export const deleteCar = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      message: 'Vehicle removed successfully'
+      message: 'Vehicle listing removed successfully'
     });
   } catch (error) {
     next(error);

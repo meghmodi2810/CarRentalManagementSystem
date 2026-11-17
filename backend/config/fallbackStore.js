@@ -12,12 +12,14 @@ const initialCars = [
     transmission: 'Automatic',
     fuelType: 'Electric',
     seatingCapacity: 5,
-    dailyRate: 95,
+    dailyRate: 4500,
     status: 'available',
     mileage: 8200,
     imageUrl: 'https://images.unsplash.com/photo-1560958089-b8a1929cea89?auto=format&fit=crop&w=1000&q=80',
     features: ['Autopilot', 'Navigation', 'Heated Seats', 'Glass Roof', 'Bluetooth'],
     location: 'Downtown Hub',
+    owner: '671000000000000000000001',
+    ownerName: 'System Admin',
     createdAt: new Date().toISOString()
   },
   {
@@ -30,12 +32,14 @@ const initialCars = [
     transmission: 'Automatic',
     fuelType: 'Petrol',
     seatingCapacity: 5,
-    dailyRate: 120,
+    dailyRate: 7500,
     status: 'available',
     mileage: 15400,
     imageUrl: 'https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=1000&q=80',
     features: ['Leather Seats', 'Sunroof', 'Harman Kardon Audio', 'Parking Assist'],
     location: 'Airport Terminal 1',
+    owner: '671000000000000000000001',
+    ownerName: 'System Admin',
     createdAt: new Date().toISOString()
   },
   {
@@ -48,12 +52,14 @@ const initialCars = [
     transmission: 'Automatic',
     fuelType: 'Hybrid',
     seatingCapacity: 5,
-    dailyRate: 75,
+    dailyRate: 3500,
     status: 'available',
     mileage: 22000,
     imageUrl: 'https://images.unsplash.com/photo-1568844293986-8d0400bd4745?auto=format&fit=crop&w=1000&q=80',
     features: ['All-Wheel Drive', 'Apple CarPlay', 'Adaptive Cruise', 'Backup Camera'],
     location: 'Downtown Hub',
+    owner: '671000000000000000000002',
+    ownerName: 'Alex Johnson',
     createdAt: new Date().toISOString()
   },
   {
@@ -66,12 +72,14 @@ const initialCars = [
     transmission: 'Automatic',
     fuelType: 'Petrol',
     seatingCapacity: 5,
-    dailyRate: 110,
+    dailyRate: 6500,
     status: 'available',
     mileage: 9100,
     imageUrl: 'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&w=1000&q=80',
     features: ['Digital Cockpit', 'Ambient Lighting', 'Surround Sound', 'Blind Spot Assist'],
     location: 'Uptown Branch',
+    owner: '671000000000000000000001',
+    ownerName: 'System Admin',
     createdAt: new Date().toISOString()
   },
   {
@@ -84,12 +92,14 @@ const initialCars = [
     transmission: 'Manual',
     fuelType: 'Petrol',
     seatingCapacity: 5,
-    dailyRate: 50,
+    dailyRate: 2200,
     status: 'available',
     mileage: 31000,
     imageUrl: 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=1000&q=80',
     features: ['Eco Mode', 'Touchscreen Infotainment', 'Isofix', 'Cruise Control'],
     location: 'Downtown Hub',
+    owner: '671000000000000000000002',
+    ownerName: 'Alex Johnson',
     createdAt: new Date().toISOString()
   },
   {
@@ -102,12 +112,14 @@ const initialCars = [
     transmission: 'Automatic',
     fuelType: 'Diesel',
     seatingCapacity: 12,
-    dailyRate: 135,
+    dailyRate: 4800,
     status: 'available',
     mileage: 18500,
     imageUrl: 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=1000&q=80',
     features: ['High Roof', 'Luggage Space', 'Rear AC', 'Reverse Camera'],
     location: 'Airport Terminal 1',
+    owner: '671000000000000000000001',
+    ownerName: 'System Admin',
     createdAt: new Date().toISOString()
   }
 ];
@@ -270,7 +282,7 @@ class FallbackStore {
       transmission: carData.transmission || 'Automatic',
       fuelType: carData.fuelType || 'Petrol',
       seatingCapacity: Number(carData.seatingCapacity) || 5,
-      dailyRate: Number(carData.dailyRate) || 80,
+      dailyRate: Number(carData.dailyRate) || 2500,
       status: carData.status || 'available',
       mileage: Number(carData.mileage) || 0,
       imageUrl:
@@ -278,6 +290,8 @@ class FallbackStore {
         'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80',
       features: Array.isArray(carData.features) ? carData.features : [],
       location: carData.location || 'Central Branch',
+      owner: carData.owner || null,
+      ownerName: carData.ownerName || 'DriveFlow Host',
       createdAt: new Date().toISOString()
     };
     this.cars.unshift(newCar);
@@ -295,24 +309,39 @@ class FallbackStore {
     const index = this.cars.findIndex((c) => c._id.toString() === id.toString());
     if (index === -1) return false;
     this.cars.splice(index, 1);
+    // Also cancel any pending rentals
+    this.rentals.forEach((r) => {
+      const carId = (r.car?._id || r.car)?.toString();
+      if (carId === id.toString() && r.status === 'pending') {
+        r.status = 'cancelled';
+        r.paymentStatus = 'refunded';
+      }
+    });
     return true;
   }
 
   // --- Rentals ---
   createRental(rentalData) {
+    const carOwner = rentalData.car?.owner?._id || rentalData.car?.owner;
     const newRental = {
       _id: '673' + Date.now().toString(16).padStart(21, '0'),
       customer: rentalData.customer,
       car: rentalData.car,
+      host: carOwner ? carOwner.toString() : null,
       startDate: rentalData.startDate,
       endDate: rentalData.endDate,
       totalDays: rentalData.totalDays,
       dailyRate: rentalData.dailyRate,
       totalAmount: rentalData.totalAmount,
-      status: 'confirmed',
+      status: 'pending', // Starts as pending until host accepts
       pickupLocation: rentalData.pickupLocation,
       dropoffLocation: rentalData.dropoffLocation,
       paymentStatus: 'paid',
+      paymentDetails: rentalData.paymentDetails || {
+        transactionId: 'TXN-' + Math.floor(10000000 + Math.random() * 90000000),
+        method: rentalData.paymentMethod || 'UPI',
+        paidAt: new Date().toISOString()
+      },
       notes: rentalData.notes || '',
       createdAt: new Date().toISOString()
     };
@@ -327,6 +356,13 @@ class FallbackStore {
     );
   }
 
+  getHostRentals(hostId) {
+    return this.rentals.filter((r) => {
+      const rentalHost = (r.host || r.car?.owner?._id || r.car?.owner)?.toString();
+      return rentalHost === hostId.toString();
+    });
+  }
+
   getAllRentals() {
     return [...this.rentals];
   }
@@ -339,8 +375,12 @@ class FallbackStore {
     const rental = this.rentals.find((r) => r._id.toString() === id.toString());
     if (!rental) return null;
     rental.status = newStatus;
+    if (newStatus === 'cancelled' && rental.paymentStatus === 'paid') {
+      rental.paymentStatus = 'refunded';
+    }
     return rental;
   }
 }
 
 export const fallbackStore = new FallbackStore();
+

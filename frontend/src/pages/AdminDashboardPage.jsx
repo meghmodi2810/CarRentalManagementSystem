@@ -280,7 +280,7 @@ const AdminDashboardPage = () => {
                       </td>
                       <td><code>{car.licensePlate}</code></td>
                       <td><span className="li-badge li-badge-category">{car.category}</span></td>
-                      <td><strong>${car.dailyRate}</strong></td>
+                      <td><strong>₹{Number(car.dailyRate || 0).toLocaleString('en-IN')}</strong></td>
                       <td>{car.location}</td>
                       <td><span className={`li-badge li-badge-${car.status}`}>{car.status}</span></td>
                       <td>
@@ -336,10 +336,10 @@ const AdminDashboardPage = () => {
                       </td>
                       <td>
                         <div style={{ fontSize: '0.785rem' }}>
-                          {new Date(b.startDate).toLocaleDateString()} → {new Date(b.endDate).toLocaleDateString()}
+                          {new Date(b.startDate).toLocaleDateString('en-IN')} → {new Date(b.endDate).toLocaleDateString('en-IN')}
                         </div>
                       </td>
-                      <td><strong>${b.totalAmount}</strong></td>
+                      <td><strong>₹{Number(b.totalAmount || 0).toLocaleString('en-IN')}</strong></td>
                       <td><span className={`li-badge li-badge-${b.status}`}>{b.status}</span></td>
                       <td>
                         <select
@@ -494,14 +494,14 @@ const AdminDashboardPage = () => {
                   </select>
                 </div>
                 <div className="li-form-group">
-                  <label className="li-label">Daily Rate ($) *</label>
+                  <label className="li-label">Daily Rate (₹) *</label>
                   <input
                     type="number"
                     name="dailyRate"
                     value={carFormData.dailyRate}
                     onChange={handleCarInputChange}
                     className={`li-input ${carFormErrors.dailyRate ? 'li-input-error' : ''}`}
-                    placeholder="e.g. 95"
+                    placeholder="e.g. 2500"
                   />
                   {carFormErrors.dailyRate && (
                     <span className="li-error-msg">{carFormErrors.dailyRate}</span>

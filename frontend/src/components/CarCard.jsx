@@ -1,8 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Users, Fuel, Settings2, MapPin, CheckCircle2, Car } from 'lucide-react';
+import { getPlaceholderForCategory } from '../utils/carPlaceholders';
 
 const CarCard = ({ car }) => {
+  const fallbackImg = getPlaceholderForCategory(car.category);
+
   return (
     <article className="li-card li-vehicle-card">
       {/* Header: Company / Vehicle Identity */}
@@ -35,10 +38,14 @@ const CarCard = ({ car }) => {
       {/* Vehicle Media Image */}
       <Link to={`/cars/${car._id}`} className="li-vehicle-img-wrap" style={{ display: 'block' }}>
         <img
-          src={car.imageUrl || 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80'}
+          src={car.imageUrl || fallbackImg}
           alt={`${car.make} ${car.model}`}
           className="li-vehicle-img"
           loading="lazy"
+          onError={(e) => {
+            e.currentTarget.onerror = null;
+            e.currentTarget.src = fallbackImg;
+          }}
         />
       </Link>
 
@@ -83,8 +90,8 @@ const CarCard = ({ car }) => {
       {/* Card Action Footer */}
       <div className="li-vehicle-footer">
         <div className="li-rate-wrap">
-          <span className="li-rate-curr">$</span>
-          <span className="li-rate-number">{car.dailyRate}</span>
+          <span className="li-rate-curr">₹</span>
+          <span className="li-rate-number">{(car.dailyRate || 0).toLocaleString('en-IN')}</span>
           <span className="li-rate-period">/ day</span>
         </div>
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Car, CalendarCheck, ShieldCheck, LogOut, PlusCircle, User } from 'lucide-react';
+import { Car, CalendarCheck, ShieldCheck, LogOut, PlusCircle, User, LogIn } from 'lucide-react';
 
 const Navbar = () => {
   const { user, isAuthenticated, isAdmin, logout } = useAuth();
@@ -9,7 +9,7 @@ const Navbar = () => {
 
   const handleLogout = async () => {
     await logout();
-    navigate('/');
+    navigate('/fleet');
   };
 
   const getInitials = (name) => {
@@ -27,7 +27,7 @@ const Navbar = () => {
       <div className="li-header-inner">
         {/* Left: Brand Logo */}
         <div className="li-header-left">
-          <Link to={isAuthenticated ? '/fleet' : '/'} className="li-brand">
+          <Link to="/fleet" className="li-brand">
             <div className="li-brand-logo-icon">
               <Car size={20} />
             </div>
@@ -37,44 +37,44 @@ const Navbar = () => {
           </Link>
         </div>
 
-        {/* Center: Navigation Links - ONLY VISIBLE WHEN AUTHENTICATED */}
-        {isAuthenticated && (
-          <nav className="li-nav">
-            <NavLink
-              to="/fleet"
-              className={({ isActive }) => `li-nav-item ${isActive ? 'active' : ''}`}
-            >
-              <Car size={20} />
-              <span>Fleet</span>
-            </NavLink>
+        {/* Center: Navigation Links */}
+        <nav className="li-nav">
+          <NavLink
+            to="/fleet"
+            className={({ isActive }) => `li-nav-item ${isActive ? 'active' : ''}`}
+          >
+            <Car size={18} />
+            <span>Fleet</span>
+          </NavLink>
 
-            <NavLink
-              to="/add-car"
-              className={({ isActive }) => `li-nav-item ${isActive ? 'active' : ''}`}
-            >
-              <PlusCircle size={20} />
-              <span>List Car</span>
-            </NavLink>
+          <NavLink
+            to="/add-car"
+            className={({ isActive }) => `li-nav-item ${isActive ? 'active' : ''}`}
+          >
+            <PlusCircle size={18} />
+            <span>List Car</span>
+          </NavLink>
 
+          {isAuthenticated && (
             <NavLink
               to="/my-rentals"
               className={({ isActive }) => `li-nav-item ${isActive ? 'active' : ''}`}
             >
-              <CalendarCheck size={20} />
+              <CalendarCheck size={18} />
               <span>Bookings</span>
             </NavLink>
+          )}
 
-            {isAdmin && (
-              <NavLink
-                to="/admin"
-                className={({ isActive }) => `li-nav-item ${isActive ? 'admin-active' : ''}`}
-              >
-                <ShieldCheck size={20} />
-                <span>Admin Hub</span>
-              </NavLink>
-            )}
-          </nav>
-        )}
+          {isAuthenticated && isAdmin && (
+            <NavLink
+              to="/admin"
+              className={({ isActive }) => `li-nav-item ${isActive ? 'admin-active' : ''}`}
+            >
+              <ShieldCheck size={18} />
+              <span>Admin Hub</span>
+            </NavLink>
+          )}
+        </nav>
 
         {/* Right: Auth / Profile Area */}
         <div className="li-header-right">
@@ -98,9 +98,12 @@ const Navbar = () => {
               </button>
             </div>
           ) : (
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <Link to="/" className="li-btn li-btn-primary li-btn-sm">
-                Sign in / Join
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              <Link to="/login" className="li-btn li-btn-subtle li-btn-sm">
+                Sign in
+              </Link>
+              <Link to="/register" className="li-btn li-btn-primary li-btn-sm">
+                Register
               </Link>
             </div>
           )}

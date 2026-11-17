@@ -54,11 +54,10 @@ router.put(
   updateCar
 );
 
-// Delete vehicle (Admin only)
+// Delete vehicle (Owner or Admin)
 router.delete(
   '/:id',
   protect,
-  authorizeRoles('admin'),
   deleteCar
 );
 

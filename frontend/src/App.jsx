@@ -23,28 +23,16 @@ function App() {
           <Navbar />
           <main className="main-content">
             <Routes>
-              {/* FIRST PAGE: Login & Signup Gateway (Public) */}
-              <Route path="/" element={<AuthLandingPage />} />
+              {/* PUBLIC BROWSING: Guests can browse the fleet and view cars without login */}
+              <Route path="/" element={<HomePage />} />
+              <Route path="/fleet" element={<HomePage />} />
+              <Route path="/cars/:id" element={<CarDetailPage />} />
+
+              {/* AUTH GATEWAY */}
               <Route path="/login" element={<AuthLandingPage />} />
               <Route path="/register" element={<AuthLandingPage />} />
 
-              {/* ALL PORTAL FEATURES ARE STRICTLY PROTECTED BEHIND LOGIN */}
-              <Route
-                path="/fleet"
-                element={
-                  <ProtectedRoute>
-                    <HomePage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/cars/:id"
-                element={
-                  <ProtectedRoute>
-                    <CarDetailPage />
-                  </ProtectedRoute>
-                }
-              />
+              {/* PROTECTED ACTIONS: Only authenticated users can list cars, book, or view reservations */}
               <Route
                 path="/add-car"
                 element={

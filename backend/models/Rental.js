@@ -14,6 +14,12 @@ const rentalSchema = new mongoose.Schema(
       required: [true, 'Rental must have an assigned car'],
       index: true
     },
+    host: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+      index: true
+    },
     startDate: {
       type: Date,
       required: [true, 'Please provide rental start date'],
@@ -64,6 +70,11 @@ const rentalSchema = new mongoose.Schema(
         message: '{VALUE} is not a valid payment status'
       },
       default: 'unpaid'
+    },
+    paymentDetails: {
+      transactionId: { type: String, default: '' },
+      method: { type: String, default: 'UPI' },
+      paidAt: { type: Date, default: null }
     },
     notes: {
       type: String,

@@ -6,7 +6,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
-import connectDB from './config/db.js';
+import connectDB, { isDbConnected } from './config/db.js';
 
 // Route imports
 import authRoutes from './routes/authRoutes.js';
@@ -67,8 +67,8 @@ app.get('/api/health', (req, res) => {
   res.status(200).json({
     status: 'success',
     message: 'Car Rental Management System API is running smoothly',
-    port: process.env.PORT || 5001,
-    database: 'connected',
+    port: process.env.PORT || 5050,
+    database: isDbConnected() ? 'connected' : 'standby',
     timestamp: new Date().toISOString()
   });
 });
