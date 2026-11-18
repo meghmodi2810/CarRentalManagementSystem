@@ -73,3 +73,4 @@ carMessageSchema.index({ car: 1, createdAt: -1 });
 
 const CarMessage = mongoose.model('CarMessage', carMessageSchema);
 export default CarMessage;
+

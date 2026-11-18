@@ -19,18 +19,18 @@ const cookieOptions = {
 export const register = async (req, res, next) => {
   try {
     const { name, email, password, role, phone, drivingLicenseNumber } = req.body;
+    const cleanEmail = (email || '').trim().toLowerCase();
 
-    let user;
-    let existingUser;
-
+    let existingUser = null;
     if (isDbConnected()) {
       try {
-        existingUser = await User.findOne({ email });
+        existingUser = await User.findOne({ email: cleanEmail });
       } catch (err) {
-        existingUser = fallbackStore.findUserByEmail(email);
+        existingUser = null;
       }
-    } else {
-      existingUser = fallbackStore.findUserByEmail(email);
+    }
+    if (!existingUser) {
+      existingUser = fallbackStore.findUserByEmail(cleanEmail);
     }
 
     if (existingUser) {
@@ -45,72 +45,57 @@ export const register = async (req, res, next) => {
       assignedRole = role;
     }
 
-    if (isDbConnected()) {
-      try {
-        user = await User.create({
-          name,
-          email,
-          password,
-          role: assignedRole,
-          phone: phone || '',
-          drivingLicenseNumber: drivingLicenseNumber || ''
-        });
-
-        const accessToken = generateAccessToken(user);
-        const refreshToken = generateRefreshToken(user);
-
-        user.refreshToken = refreshToken;
-        await user.save({ validateBeforeSave: false });
-
-        res.cookie('refreshToken', refreshToken, cookieOptions);
-
-        return res.status(201).json({
-          success: true,
-          message: 'Registration successful',
-          accessToken,
-          refreshToken,
-          user: {
-            id: user._id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-            phone: user.phone,
-            drivingLicenseNumber: user.drivingLicenseNumber
-          }
-        });
-      } catch (dbErr) {
-        // Fallback to dynamic store if DB write fails
-        console.log('[Auth] DB write failed, using fallback store');
-      }
-    }
-
-    // Dynamic Store creation
-    user = await fallbackStore.createUser({
+    // Always persist to local store first
+    const storeUser = await fallbackStore.createUser({
       name,
-      email,
+      email: cleanEmail,
       password,
       role: assignedRole,
       phone: phone || '',
       drivingLicenseNumber: drivingLicenseNumber || ''
     });
 
-    const accessToken = generateAccessToken(user);
-    const refreshToken = generateRefreshToken(user);
+    let dbUser = null;
+    if (isDbConnected()) {
+      try {
+        dbUser = await User.create({
+          name,
+          email: cleanEmail,
+          password,
+          role: assignedRole,
+          phone: phone || '',
+          drivingLicenseNumber: drivingLicenseNumber || ''
+        });
+      } catch (dbErr) {
+        console.log('[Auth] DB write failed, using persistent local store:', dbErr.message);
+      }
+    }
+
+    const activeUser = dbUser || storeUser;
+    const accessToken = generateAccessToken(activeUser);
+    const refreshToken = generateRefreshToken(activeUser);
+
+    if (dbUser) {
+      try {
+        dbUser.refreshToken = refreshToken;
+        await dbUser.save({ validateBeforeSave: false });
+      } catch (e) {}
+    }
 
     res.cookie('refreshToken', refreshToken, cookieOptions);
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       message: 'Registration successful',
       accessToken,
       refreshToken,
       user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        phone: user.phone,
-        drivingLicenseNumber: user.drivingLicenseNumber
+        id: activeUser._id,
+        name: activeUser.name,
+        email: activeUser.email,
+        role: activeUser.role,
+        phone: activeUser.phone,
+        drivingLicenseNumber: activeUser.drivingLicenseNumber
       }
     });
   } catch (error) {
@@ -124,25 +109,56 @@ export const register = async (req, res, next) => {
 export const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
+    const cleanEmail = (email || '').trim().toLowerCase();
 
     let user = null;
     let isMatch = false;
 
+    // 1. Try DB first if connected
     if (isDbConnected()) {
       try {
-        user = await User.findOne({ email }).select('+password +refreshToken');
-        if (user) {
-          isMatch = await user.matchPassword(password);
+        const dbCandidate = await User.findOne({ email: cleanEmail }).select('+password +refreshToken');
+        if (dbCandidate) {
+          const match = await dbCandidate.matchPassword(password);
+          if (match) {
+            user = dbCandidate;
+            isMatch = true;
+          }
         }
       } catch (err) {
-        user = null;
+        // Fallback
       }
     }
 
-    if (!user) {
-      user = fallbackStore.findUserByEmail(email);
-      if (user) {
-        isMatch = await bcrypt.compare(password, user.password);
+    // 2. If not matched in DB, check persistent local store
+    if (!user || !isMatch) {
+      const storeCandidate = fallbackStore.findUserByEmail(cleanEmail);
+      if (storeCandidate) {
+        const match = await bcrypt.compare(password, storeCandidate.password);
+        if (match) {
+          user = storeCandidate;
+          isMatch = true;
+
+          // Asynchronously sync to MongoDB if DB is connected but didn't have user yet
+          if (isDbConnected()) {
+            try {
+              const existingInDb = await User.findOne({ email: cleanEmail });
+              if (!existingInDb) {
+                await User.create({
+                  _id: storeCandidate._id,
+                  name: storeCandidate.name,
+                  email: storeCandidate.email,
+                  password: password,
+                  role: storeCandidate.role,
+                  phone: storeCandidate.phone,
+                  drivingLicenseNumber: storeCandidate.drivingLicenseNumber
+                });
+              }
+            } catch (syncErr) {
+              // Ignore background sync error
+            }
+          }
+        }
       }
     }
 
@@ -184,8 +200,8 @@ export const login = async (req, res, next) => {
         name: user.name,
         email: user.email,
         role: user.role,
-        phone: user.phone,
-        drivingLicenseNumber: user.drivingLicenseNumber
+        phone: user.phone || '',
+        drivingLicenseNumber: user.drivingLicenseNumber || ''
       }
     });
   } catch (error) {

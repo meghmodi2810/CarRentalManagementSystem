@@ -1,6 +1,14 @@
 import bcrypt from 'bcryptjs';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-// Pre-seeded initial data
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const DATA_DIR = path.join(__dirname, '..', 'data');
+const STORE_FILE = path.join(DATA_DIR, 'store.json');
+
+// Pre-seeded initial cars
 const initialCars = [
   {
     _id: '672000000000000000000001',
@@ -20,6 +28,8 @@ const initialCars = [
     location: 'Downtown Hub',
     owner: '671000000000000000000001',
     ownerName: 'System Admin',
+    likes: [],
+    likesCount: 0,
     createdAt: new Date().toISOString()
   },
   {
@@ -40,6 +50,8 @@ const initialCars = [
     location: 'Airport Terminal 1',
     owner: '671000000000000000000001',
     ownerName: 'System Admin',
+    likes: [],
+    likesCount: 0,
     createdAt: new Date().toISOString()
   },
   {
@@ -60,6 +72,8 @@ const initialCars = [
     location: 'Downtown Hub',
     owner: '671000000000000000000002',
     ownerName: 'Alex Johnson',
+    likes: [],
+    likesCount: 0,
     createdAt: new Date().toISOString()
   },
   {
@@ -68,38 +82,42 @@ const initialCars = [
     model: 'C-Class Sedan',
     year: 2024,
     licensePlate: 'MB-202-CC',
-    category: 'Sedan',
+    category: 'Luxury',
     transmission: 'Automatic',
     fuelType: 'Petrol',
     seatingCapacity: 5,
-    dailyRate: 6500,
+    dailyRate: 6800,
     status: 'available',
-    mileage: 9100,
+    mileage: 11000,
     imageUrl: 'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&w=1000&q=80',
-    features: ['Digital Cockpit', 'Ambient Lighting', 'Surround Sound', 'Blind Spot Assist'],
-    location: 'Uptown Branch',
+    features: ['Burmester Surround', 'Panoramic Roof', 'Ambient Lighting', 'Heated Seats'],
+    location: 'Airport Terminal 1',
     owner: '671000000000000000000001',
     ownerName: 'System Admin',
+    likes: [],
+    likesCount: 0,
     createdAt: new Date().toISOString()
   },
   {
     _id: '672000000000000000000005',
-    make: 'Volkswagen',
-    model: 'Golf TSI',
-    year: 2022,
-    licensePlate: 'VW-118-GF',
-    category: 'Hatchback',
-    transmission: 'Manual',
+    make: 'Honda',
+    model: 'Civic Sport',
+    year: 2023,
+    licensePlate: 'HN-108-CV',
+    category: 'Sedan',
+    transmission: 'Automatic',
     fuelType: 'Petrol',
     seatingCapacity: 5,
-    dailyRate: 2200,
+    dailyRate: 2600,
     status: 'available',
-    mileage: 31000,
-    imageUrl: 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=1000&q=80',
-    features: ['Eco Mode', 'Touchscreen Infotainment', 'Isofix', 'Cruise Control'],
+    mileage: 19000,
+    imageUrl: 'https://images.unsplash.com/photo-1590362891991-f776e747a588?auto=format&fit=crop&w=1000&q=80',
+    features: ['Lane Keeping Assist', 'Apple CarPlay', 'Android Auto', 'Fuel Efficient'],
     location: 'Downtown Hub',
     owner: '671000000000000000000002',
     ownerName: 'Alex Johnson',
+    likes: [],
+    likesCount: 0,
     createdAt: new Date().toISOString()
   },
   {
@@ -120,6 +138,8 @@ const initialCars = [
     location: 'Airport Terminal 1',
     owner: '671000000000000000000001',
     ownerName: 'System Admin',
+    likes: [],
+    likesCount: 0,
     createdAt: new Date().toISOString()
   }
 ];
@@ -127,17 +147,38 @@ const initialCars = [
 class FallbackStore {
   constructor() {
     this.users = [];
-    this.cars = initialCars.map((c) => ({ ...c, likes: [], likesCount: 0 }));
+    this.cars = [];
     this.rentals = [];
     this.carMessages = [];
     this.notifications = [];
-    this.initDefaultUsers();
+    this.initStore();
   }
 
-  async initDefaultUsers() {
-    const salt = await bcrypt.genSalt(10);
-    const adminPassword = await bcrypt.hash('adminpassword123', salt);
-    const customerPassword = await bcrypt.hash('password123', salt);
+  initStore() {
+    try {
+      if (!fs.existsSync(DATA_DIR)) {
+        fs.mkdirSync(DATA_DIR, { recursive: true });
+      }
+
+      if (fs.existsSync(STORE_FILE)) {
+        const raw = fs.readFileSync(STORE_FILE, 'utf-8');
+        const data = JSON.parse(raw);
+        this.users = Array.isArray(data.users) ? data.users : [];
+        this.cars = Array.isArray(data.cars) && data.cars.length > 0 ? data.cars : initialCars;
+        this.rentals = Array.isArray(data.rentals) ? data.rentals : [];
+        this.carMessages = Array.isArray(data.carMessages) ? data.carMessages : [];
+        this.notifications = Array.isArray(data.notifications) ? data.notifications : [];
+        console.log(`[Store] Loaded persistent store with ${this.users.length} users, ${this.cars.length} cars, ${this.rentals.length} rentals.`);
+        return;
+      }
+    } catch (err) {
+      console.error('[Store] Error reading persistent store, creating default:', err.message);
+    }
+
+    // Default seed setup
+    const salt = bcrypt.genSaltSync(10);
+    const adminPassword = bcrypt.hashSync('adminpassword123', salt);
+    const customerPassword = bcrypt.hashSync('password123', salt);
 
     this.users = [
       {
@@ -164,39 +205,41 @@ class FallbackStore {
       }
     ];
 
-    // Initial sample rental
-    const today = new Date();
-    const startDate = new Date(today);
-    startDate.setDate(today.getDate() + 1);
-    const endDate = new Date(today);
-    endDate.setDate(today.getDate() + 4);
+    this.cars = initialCars;
+    this.rentals = [];
+    this.carMessages = [];
+    this.notifications = [];
+    this.saveToFile();
+    console.log('[Store] Persistent store initialized at', STORE_FILE);
+  }
 
-    this.rentals = [
-      {
-        _id: '673000000000000000000001',
-        customer: this.users[1],
-        car: this.cars[0],
-        startDate: startDate.toISOString(),
-        endDate: endDate.toISOString(),
-        totalDays: 3,
-        dailyRate: 95,
-        totalAmount: 285,
-        status: 'confirmed',
-        pickupLocation: 'Downtown Hub',
-        dropoffLocation: 'Downtown Hub',
-        paymentStatus: 'paid',
-        notes: 'Initial reservation for customer Alex Johnson',
-        createdAt: new Date().toISOString()
+  saveToFile() {
+    try {
+      if (!fs.existsSync(DATA_DIR)) {
+        fs.mkdirSync(DATA_DIR, { recursive: true });
       }
-    ];
+      const data = {
+        users: this.users,
+        cars: this.cars,
+        rentals: this.rentals,
+        carMessages: this.carMessages,
+        notifications: this.notifications
+      };
+      fs.writeFileSync(STORE_FILE, JSON.stringify(data, null, 2), 'utf-8');
+    } catch (err) {
+      console.error('[Store] Failed to write persistent store:', err.message);
+    }
   }
 
   // --- Users ---
   findUserByEmail(email) {
-    return this.users.find((u) => u.email.toLowerCase() === email.toLowerCase());
+    if (!email) return null;
+    const clean = email.trim().toLowerCase();
+    return this.users.find((u) => u.email && u.email.trim().toLowerCase() === clean);
   }
 
   findUserById(id) {
+    if (!id) return null;
     const user = this.users.find((u) => u._id.toString() === id.toString());
     if (!user) return null;
     const { password, ...safeUser } = user;
@@ -206,10 +249,25 @@ class FallbackStore {
   async createUser(userData) {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(userData.password, salt);
+    const cleanEmail = userData.email.trim().toLowerCase();
+
+    // Check if user already exists
+    const existingIndex = this.users.findIndex((u) => u.email.trim().toLowerCase() === cleanEmail);
+    if (existingIndex !== -1) {
+      // Update password & details
+      this.users[existingIndex].password = hashedPassword;
+      this.users[existingIndex].name = userData.name || this.users[existingIndex].name;
+      this.users[existingIndex].phone = userData.phone || this.users[existingIndex].phone;
+      this.users[existingIndex].drivingLicenseNumber =
+        userData.drivingLicenseNumber || this.users[existingIndex].drivingLicenseNumber;
+      this.saveToFile();
+      return this.users[existingIndex];
+    }
+
     const newUser = {
       _id: '671' + Date.now().toString(16).padStart(21, '0'),
       name: userData.name,
-      email: userData.email.toLowerCase(),
+      email: cleanEmail,
       password: hashedPassword,
       role: userData.role || 'customer',
       phone: userData.phone || '',
@@ -218,6 +276,7 @@ class FallbackStore {
       createdAt: new Date().toISOString()
     };
     this.users.push(newUser);
+    this.saveToFile();
     return newUser;
   }
 
@@ -227,7 +286,12 @@ class FallbackStore {
     if (data.name) user.name = data.name;
     if (data.phone !== undefined) user.phone = data.phone;
     if (data.drivingLicenseNumber !== undefined) user.drivingLicenseNumber = data.drivingLicenseNumber;
+    this.saveToFile();
     return user;
+  }
+
+  getAllUsers() {
+    return this.users;
   }
 
   // --- Cars ---
@@ -294,9 +358,12 @@ class FallbackStore {
       location: carData.location || 'Central Branch',
       owner: carData.owner || null,
       ownerName: carData.ownerName || 'DriveFlow Host',
+      likes: [],
+      likesCount: 0,
       createdAt: new Date().toISOString()
     };
     this.cars.unshift(newCar);
+    this.saveToFile();
     return newCar;
   }
 
@@ -304,6 +371,7 @@ class FallbackStore {
     const index = this.cars.findIndex((c) => c._id.toString() === id.toString());
     if (index === -1) return null;
     this.cars[index] = { ...this.cars[index], ...updateData };
+    this.saveToFile();
     return this.cars[index];
   }
 
@@ -311,7 +379,6 @@ class FallbackStore {
     const index = this.cars.findIndex((c) => c._id.toString() === id.toString());
     if (index === -1) return false;
     this.cars.splice(index, 1);
-    // Also cancel any pending rentals
     this.rentals.forEach((r) => {
       const carId = (r.car?._id || r.car)?.toString();
       if (carId === id.toString() && r.status === 'pending') {
@@ -319,6 +386,7 @@ class FallbackStore {
         r.paymentStatus = 'refunded';
       }
     });
+    this.saveToFile();
     return true;
   }
 
@@ -337,6 +405,7 @@ class FallbackStore {
       isLiked = false;
     }
     car.likesCount = car.likes.length;
+    this.saveToFile();
     return { isLiked, likesCount: car.likesCount };
   }
 
@@ -358,18 +427,19 @@ class FallbackStore {
       totalDays: rentalData.totalDays,
       dailyRate: rentalData.dailyRate,
       totalAmount: rentalData.totalAmount,
-      status: 'pending', // Starts as pending until host approves (NO payment required yet!)
+      status: 'pending',
       pickupLocation: rentalData.pickupLocation,
       dropoffLocation: rentalData.dropoffLocation,
       tripDestination: rentalData.tripDestination || '',
       customerPhone: rentalData.customerPhone || '',
       customerLicense: rentalData.customerLicense || '',
-      paymentStatus: 'unpaid', // Unpaid until approved
+      paymentStatus: 'unpaid',
       paymentDetails: null,
       notes: rentalData.notes || '',
       createdAt: new Date().toISOString()
     };
     this.rentals.unshift(newRental);
+    this.saveToFile();
     return newRental;
   }
 
@@ -383,6 +453,7 @@ class FallbackStore {
       method: 'UPI',
       paidAt: new Date().toISOString()
     };
+    this.saveToFile();
     return rental;
   }
 
@@ -415,6 +486,7 @@ class FallbackStore {
     if (newStatus === 'cancelled' && rental.paymentStatus === 'paid') {
       rental.paymentStatus = 'refunded';
     }
+    this.saveToFile();
     return rental;
   }
 
@@ -437,6 +509,7 @@ class FallbackStore {
       createdAt: new Date().toISOString()
     };
     this.carMessages.unshift(msg);
+    this.saveToFile();
     return msg;
   }
 
@@ -452,6 +525,7 @@ class FallbackStore {
       createdAt: new Date().toISOString()
     };
     msg.replies.push(reply);
+    this.saveToFile();
     return msg;
   }
 
@@ -485,6 +559,7 @@ class FallbackStore {
       createdAt: new Date().toISOString()
     };
     this.notifications.unshift(notif);
+    this.saveToFile();
     return notif;
   }
 
@@ -493,6 +568,7 @@ class FallbackStore {
       (n) => n._id.toString() === notifId.toString() && n.recipient.toString() === userId.toString()
     );
     if (notif) notif.isRead = true;
+    this.saveToFile();
     return notif;
   }
 
@@ -501,9 +577,9 @@ class FallbackStore {
     this.notifications.forEach((n) => {
       if (n.recipient.toString() === uidStr) n.isRead = true;
     });
+    this.saveToFile();
     return true;
   }
 }
 
 export const fallbackStore = new FallbackStore();
-

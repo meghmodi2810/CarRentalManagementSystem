@@ -483,3 +483,4 @@ const PaymentGatewayModal = ({ isOpen, onClose, amount, carTitle, bookingId, onP
 };
 
 export default PaymentGatewayModal;
+

@@ -108,3 +108,4 @@ export const markAsRead = async (req, res, next) => {
     next(error);
   }
 };
+
