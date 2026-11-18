@@ -6,7 +6,8 @@ import {
   getHostRentals,
   getAllRentals,
   getRentalById,
-  updateRentalStatus
+  updateRentalStatus,
+  payForRental
 } from '../controllers/rentalController.js';
 import { protect } from '../middleware/authMiddleware.js';
 import { authorizeRoles } from '../middleware/roleMiddleware.js';
@@ -31,13 +32,14 @@ router.get('/host-requests', getHostRentals);
 // Admin / Agent endpoints
 router.get('/', authorizeRoles('admin', 'agent'), getAllRentals);
 
-// Detail and status update
+// Detail, payment, and status update
 router.get('/:id', getRentalById);
+router.patch('/:id/pay', payForRental);
 router.patch(
   '/:id/status',
   [
     body('status')
-      .isIn(['pending', 'confirmed', 'active', 'completed', 'cancelled'])
+      .isIn(['pending', 'approved', 'confirmed', 'active', 'completed', 'cancelled'])
       .withMessage('Valid rental status is required')
   ],
   validateRequest,

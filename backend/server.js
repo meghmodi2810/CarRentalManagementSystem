@@ -13,6 +13,7 @@ import authRoutes from './routes/authRoutes.js';
 import carRoutes from './routes/carRoutes.js';
 import rentalRoutes from './routes/rentalRoutes.js';
 import userRoutes from './routes/userRoutes.js';
+import notificationRoutes from './routes/notificationRoutes.js';
 
 // Middleware imports
 import { notFound, errorHandler } from './middleware/errorMiddleware.js';
@@ -78,6 +79,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/cars', carRoutes);
 app.use('/api/rentals', rentalRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Centralized Error Handling Middlewares
 app.use(notFound);

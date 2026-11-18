@@ -127,8 +127,10 @@ const initialCars = [
 class FallbackStore {
   constructor() {
     this.users = [];
-    this.cars = [...initialCars];
+    this.cars = initialCars.map((c) => ({ ...c, likes: [], likesCount: 0 }));
     this.rentals = [];
+    this.carMessages = [];
+    this.notifications = [];
     this.initDefaultUsers();
   }
 
@@ -320,6 +322,29 @@ class FallbackStore {
     return true;
   }
 
+  toggleLikeCar(carId, userId) {
+    const car = this.cars.find((c) => c._id.toString() === carId.toString());
+    if (!car) return null;
+    if (!car.likes) car.likes = [];
+    const uidStr = userId.toString();
+    const index = car.likes.findIndex((id) => id.toString() === uidStr);
+    let isLiked = false;
+    if (index === -1) {
+      car.likes.push(uidStr);
+      isLiked = true;
+    } else {
+      car.likes.splice(index, 1);
+      isLiked = false;
+    }
+    car.likesCount = car.likes.length;
+    return { isLiked, likesCount: car.likesCount };
+  }
+
+  getSavedCars(userId) {
+    const uidStr = userId.toString();
+    return this.cars.filter((c) => c.likes && c.likes.map((id) => id.toString()).includes(uidStr));
+  }
+
   // --- Rentals ---
   createRental(rentalData) {
     const carOwner = rentalData.car?.owner?._id || rentalData.car?.owner;
@@ -333,20 +358,32 @@ class FallbackStore {
       totalDays: rentalData.totalDays,
       dailyRate: rentalData.dailyRate,
       totalAmount: rentalData.totalAmount,
-      status: 'pending', // Starts as pending until host accepts
+      status: 'pending', // Starts as pending until host approves (NO payment required yet!)
       pickupLocation: rentalData.pickupLocation,
       dropoffLocation: rentalData.dropoffLocation,
-      paymentStatus: 'paid',
-      paymentDetails: rentalData.paymentDetails || {
-        transactionId: 'TXN-' + Math.floor(10000000 + Math.random() * 90000000),
-        method: rentalData.paymentMethod || 'UPI',
-        paidAt: new Date().toISOString()
-      },
+      tripDestination: rentalData.tripDestination || '',
+      customerPhone: rentalData.customerPhone || '',
+      customerLicense: rentalData.customerLicense || '',
+      paymentStatus: 'unpaid', // Unpaid until approved
+      paymentDetails: null,
       notes: rentalData.notes || '',
       createdAt: new Date().toISOString()
     };
     this.rentals.unshift(newRental);
     return newRental;
+  }
+
+  payRental(id, paymentDetails) {
+    const rental = this.rentals.find((r) => r._id.toString() === id.toString());
+    if (!rental) return null;
+    rental.paymentStatus = 'paid';
+    rental.status = 'confirmed';
+    rental.paymentDetails = paymentDetails || {
+      transactionId: 'TXN-' + Math.floor(10000000 + Math.random() * 90000000),
+      method: 'UPI',
+      paidAt: new Date().toISOString()
+    };
+    return rental;
   }
 
   getUserRentals(userId) {
@@ -379,6 +416,92 @@ class FallbackStore {
       rental.paymentStatus = 'refunded';
     }
     return rental;
+  }
+
+  // --- Car Discussion / Messages ---
+  getCarMessages(carId) {
+    return this.carMessages.filter((m) => m.car.toString() === carId.toString());
+  }
+
+  createCarMessage(data) {
+    const msg = {
+      _id: '674' + Date.now().toString(16).padStart(21, '0'),
+      car: data.car,
+      sender: data.sender,
+      senderName: data.senderName,
+      senderRole: data.senderRole || 'customer',
+      recipient: data.recipient,
+      subject: data.subject || 'Vehicle Inquiry',
+      content: data.content,
+      replies: [],
+      createdAt: new Date().toISOString()
+    };
+    this.carMessages.unshift(msg);
+    return msg;
+  }
+
+  replyCarMessage(messageId, replyData) {
+    const msg = this.carMessages.find((m) => m._id.toString() === messageId.toString());
+    if (!msg) return null;
+    const reply = {
+      _id: '675' + Date.now().toString(16).padStart(21, '0'),
+      sender: replyData.sender,
+      senderName: replyData.senderName,
+      senderRole: replyData.senderRole || 'host',
+      content: replyData.content,
+      createdAt: new Date().toISOString()
+    };
+    msg.replies.push(reply);
+    return msg;
+  }
+
+  getUserMessages(userId) {
+    const uidStr = userId.toString();
+    return this.carMessages.filter(
+      (m) =>
+        m.sender?.toString() === uidStr ||
+        m.recipient?.toString() === uidStr ||
+        m.replies?.some((r) => r.sender?.toString() === uidStr)
+    );
+  }
+
+  // --- Notifications ---
+  getUserNotifications(userId) {
+    const uidStr = userId.toString();
+    return this.notifications.filter((n) => n.recipient.toString() === uidStr);
+  }
+
+  createNotification(data) {
+    const notif = {
+      _id: '676' + Date.now().toString(16).padStart(21, '0'),
+      recipient: data.recipient,
+      title: data.title,
+      message: data.message,
+      type: data.type || 'new_request',
+      link: data.link || '/my-rentals',
+      isRead: false,
+      relatedRental: data.relatedRental || null,
+      relatedCar: data.relatedCar || null,
+      createdAt: new Date().toISOString()
+    };
+    this.notifications.unshift(notif);
+    return notif;
+  }
+
+  markNotificationAsRead(notifId, userId) {
+    const notif = this.notifications.find(
+      (n) => n._id.toString() === notifId.toString() && n.recipient.toString() === userId.toString()
+    );
+    if (notif) notif.isRead = true;
+    return notif;
+  }
+
+  markAllNotificationsAsRead(userId) {
+    const uidStr = userId.toString();
+    this.notifications.forEach((n) => {
+      if (n.recipient.toString() === uidStr) n.isRead = true;
+    });
+    return true;
   }
 }
 

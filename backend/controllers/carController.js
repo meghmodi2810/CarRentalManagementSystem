@@ -301,3 +301,91 @@ export const deleteCar = async (req, res, next) => {
     next(error);
   }
 };
+
+// @desc    Toggle like / save car for later
+// @route   POST /api/cars/:id/like
+// @access  Private
+export const toggleLikeCar = async (req, res, next) => {
+  try {
+    const userId = (req.user.id || req.user._id).toString();
+    const carId = req.params.id;
+
+    if (isDbConnected()) {
+      try {
+        const car = await Car.findById(carId);
+        if (!car) {
+          return res.status(404).json({ success: false, message: 'Car not found' });
+        }
+
+        if (!car.likes) car.likes = [];
+        const index = car.likes.findIndex((id) => id.toString() === userId);
+        let isLiked = false;
+
+        if (index === -1) {
+          car.likes.push(userId);
+          isLiked = true;
+        } else {
+          car.likes.splice(index, 1);
+          isLiked = false;
+        }
+
+        car.likesCount = car.likes.length;
+        await car.save();
+
+        return res.status(200).json({
+          success: true,
+          isLiked,
+          likesCount: car.likesCount,
+          message: isLiked ? 'Vehicle saved to your favorites' : 'Vehicle removed from favorites'
+        });
+      } catch (err) {
+        // Fallback
+      }
+    }
+
+    const result = fallbackStore.toggleLikeCar(carId, userId);
+    if (!result) {
+      return res.status(404).json({ success: false, message: 'Car not found' });
+    }
+
+    res.status(200).json({
+      success: true,
+      isLiked: result.isLiked,
+      likesCount: result.likesCount,
+      message: result.isLiked ? 'Vehicle saved to your favorites' : 'Vehicle removed from favorites'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get all saved / liked cars for logged-in user
+// @route   GET /api/cars/saved
+// @access  Private
+export const getSavedCars = async (req, res, next) => {
+  try {
+    const userId = (req.user.id || req.user._id).toString();
+
+    if (isDbConnected()) {
+      try {
+        const cars = await Car.find({ likes: userId }).populate('owner', 'name email phone');
+        return res.status(200).json({
+          success: true,
+          count: cars.length,
+          data: cars
+        });
+      } catch (err) {
+        // Fallback
+      }
+    }
+
+    const cars = fallbackStore.getSavedCars(userId);
+    res.status(200).json({
+      success: true,
+      count: cars.length,
+      data: cars
+    });
+  } catch (error) {
+    next(error);
+  }
+};

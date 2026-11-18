@@ -1,7 +1,8 @@
 import React from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Car, CalendarCheck, ShieldCheck, LogOut, PlusCircle, User, LogIn } from 'lucide-react';
+import { Car, CalendarCheck, ShieldCheck, LogOut, PlusCircle, User, LogIn, Heart } from 'lucide-react';
+import NotificationDropdown from './NotificationDropdown';
 
 const Navbar = () => {
   const { user, isAuthenticated, isAdmin, logout } = useAuth();
@@ -81,23 +82,26 @@ const Navbar = () => {
         {/* Right: Auth / Profile Area */}
         <div className="li-header-right">
           {isAuthenticated ? (
-            <div className="li-user-menu">
-              <Link to="/profile" style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', textDecoration: 'none' }}>
-                <div className="li-avatar-circle" title={user?.name}>
-                  {getInitials(user?.name)}
-                </div>
-                <div className="li-user-info-text">
-                  <span className="li-user-name">{user?.name}</span>
-                  <span className="li-user-role-tag">{user?.role}</span>
-                </div>
-              </Link>
-              <button
-                onClick={handleLogout}
-                className="li-logout-btn"
-                title="Sign Out"
-              >
-                <LogOut size={16} />
-              </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <NotificationDropdown />
+              <div className="li-user-menu">
+                <Link to="/profile" style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', textDecoration: 'none' }}>
+                  <div className="li-avatar-circle" title={user?.name}>
+                    {getInitials(user?.name)}
+                  </div>
+                  <div className="li-user-info-text">
+                    <span className="li-user-name">{user?.name}</span>
+                    <span className="li-user-role-tag">{user?.role}</span>
+                  </div>
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="li-logout-btn"
+                  title="Sign Out"
+                >
+                  <LogOut size={16} />
+                </button>
+              </div>
             </div>
           ) : (
             <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>

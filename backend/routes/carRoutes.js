@@ -5,8 +5,15 @@ import {
   getCarById,
   createCar,
   updateCar,
-  deleteCar
+  deleteCar,
+  toggleLikeCar,
+  getSavedCars
 } from '../controllers/carController.js';
+import {
+  getCarMessages,
+  postCarMessage,
+  replyCarMessage
+} from '../controllers/carMessageController.js';
 import { protect } from '../middleware/authMiddleware.js';
 import { authorizeRoles } from '../middleware/roleMiddleware.js';
 import { validateRequest } from '../middleware/validatorMiddleware.js';
@@ -34,7 +41,16 @@ const carValidation = [
 
 // Car browsing routes
 router.get('/', getCars);
+router.get('/saved', protect, getSavedCars);
 router.get('/:id', getCarById);
+
+// Car Discussions & Inquiries (Customer contacting vehicle owner via post)
+router.get('/:id/messages', getCarMessages);
+router.post('/:id/messages', protect, postCarMessage);
+router.post('/:id/messages/:messageId/reply', protect, replyCarMessage);
+
+// Like & Save car for later
+router.post('/:id/like', protect, toggleLikeCar);
 
 // Add vehicle to give on rent (Authenticated users, hosts, agents, admins)
 router.post(

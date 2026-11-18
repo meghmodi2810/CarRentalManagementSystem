@@ -47,7 +47,7 @@ const rentalSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: {
-        values: ['pending', 'confirmed', 'active', 'completed', 'cancelled'],
+        values: ['pending', 'approved', 'confirmed', 'active', 'completed', 'cancelled'],
         message: '{VALUE} is not a valid rental status'
       },
       default: 'pending',
@@ -61,6 +61,21 @@ const rentalSchema = new mongoose.Schema(
     dropoffLocation: {
       type: String,
       required: [true, 'Please provide dropoff location'],
+      trim: true
+    },
+    tripDestination: {
+      type: String,
+      default: '',
+      trim: true
+    },
+    customerPhone: {
+      type: String,
+      default: '',
+      trim: true
+    },
+    customerLicense: {
+      type: String,
+      default: '',
       trim: true
     },
     paymentStatus: {

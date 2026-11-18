@@ -1,10 +1,50 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Users, Fuel, Settings2, MapPin, CheckCircle2, Car } from 'lucide-react';
+import { Users, Fuel, Settings2, MapPin, CheckCircle2, Car, Heart } from 'lucide-react';
 import { getPlaceholderForCategory } from '../utils/carPlaceholders';
+import { useAuth } from '../context/AuthContext';
+import api from '../api/axios';
 
 const CarCard = ({ car }) => {
+  const { user, isAuthenticated } = useAuth();
   const fallbackImg = getPlaceholderForCategory(car.category);
+
+  const userId = (user?.id || user?._id)?.toString();
+  const initialLiked = Boolean(
+    userId && car.likes && car.likes.map((id) => (id._id || id).toString()).includes(userId)
+  );
+
+  const [isLiked, setIsLiked] = useState(initialLiked);
+  const [likesCount, setLikesCount] = useState(car.likesCount || car.likes?.length || 0);
+  const [likeLoading, setLikeLoading] = useState(false);
+
+  const handleToggleLike = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!isAuthenticated) {
+      alert('Please sign in to save vehicles to your favorites.');
+      return;
+    }
+
+    // Optimistic update
+    const nextState = !isLiked;
+    setIsLiked(nextState);
+    setLikesCount((prev) => (nextState ? prev + 1 : Math.max(0, prev - 1)));
+
+    setLikeLoading(true);
+    try {
+      const res = await api.post(`/cars/${car._id}/like`);
+      setIsLiked(res.data.isLiked);
+      setLikesCount(res.data.likesCount);
+    } catch (err) {
+      // Revert on error
+      setIsLiked(!nextState);
+      setLikesCount((prev) => (!nextState ? prev + 1 : Math.max(0, prev - 1)));
+    } finally {
+      setLikeLoading(false);
+    }
+  };
 
   return (
     <article className="li-card li-vehicle-card">
@@ -30,9 +70,35 @@ const CarCard = ({ car }) => {
           </div>
         </div>
 
-        <span className={`li-badge li-badge-${car.status}`}>
-          {car.status}
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+          {/* Like / Save Button */}
+          <button
+            type="button"
+            onClick={handleToggleLike}
+            disabled={likeLoading}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '3px',
+              padding: '4px',
+              color: isLiked ? '#ef4444' : 'var(--li-text-secondary)',
+              transition: 'transform 0.15s ease'
+            }}
+            title={isLiked ? 'Saved to Favorites' : 'Save for later'}
+          >
+            <Heart size={18} fill={isLiked ? '#ef4444' : 'none'} />
+            {likesCount > 0 && (
+              <span style={{ fontSize: '0.725rem', fontWeight: 600 }}>{likesCount}</span>
+            )}
+          </button>
+
+          <span className={`li-badge li-badge-${car.status}`}>
+            {car.status}
+          </span>
+        </div>
       </div>
 
       {/* Vehicle Media Image */}
@@ -103,7 +169,7 @@ const CarCard = ({ car }) => {
             to={`/cars/${car._id}`}
             className={`li-btn ${car.status === 'available' ? 'li-btn-primary' : 'li-btn-subtle'} li-btn-sm`}
           >
-            {car.status === 'available' ? 'Reserve vehicle' : 'Unavailable'}
+            {car.status === 'available' ? 'Request to Book' : 'Unavailable'}
           </Link>
         </div>
       </div>

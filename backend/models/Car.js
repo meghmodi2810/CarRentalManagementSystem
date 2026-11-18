@@ -94,6 +94,16 @@ const carSchema = new mongoose.Schema(
     ownerName: {
       type: String,
       default: ''
+    },
+    likes: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+      }
+    ],
+    likesCount: {
+      type: Number,
+      default: 0
     }
   },
   {
