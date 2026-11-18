@@ -99,23 +99,19 @@ const CarDiscussionBoard = ({ carId, ownerName, isOwner }) => {
   };
 
   return (
-    <div className="li-card" style={{ marginTop: '1.5rem', padding: '1.75rem' }}>
+    <div className="li-card" style={{ marginTop: '1.5rem', padding: '1.5rem' }}>
       {/* Section Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', borderBottom: '1px solid var(--li-border)', paddingBottom: '0.85rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem', borderBottom: '1px solid var(--li-border)', paddingBottom: '0.75rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <MessageSquare size={20} color="var(--li-primary)" />
-          <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--li-text-primary)' }}>
-            Questions & Inquiries with Host
+          <MessageSquare size={18} color="var(--li-primary)" />
+          <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--li-text-primary)', margin: 0 }}>
+            Discussion
           </h3>
           <span className="li-badge li-badge-category" style={{ fontSize: '0.7rem' }}>
-            {messages.length} {messages.length === 1 ? 'Post' : 'Posts'}
+            {messages.length}
           </span>
         </div>
       </div>
-
-      <p style={{ color: 'var(--li-text-secondary)', fontSize: '0.825rem', marginBottom: '1.25rem' }}>
-        Have questions about outstation travel, security deposit, or car condition? Post your question below to communicate directly with <strong>{ownerName || 'the host'}</strong>.
-      </p>
 
       {/* Notice */}
       {postNotice && (

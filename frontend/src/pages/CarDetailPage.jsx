@@ -233,41 +233,21 @@ const CarDetailPage = () => {
 
       {/* REQUEST SUBMISSION CONFIRMATION SCREEN */}
       {requestSuccess ? (
-        <div className="li-card li-state-card" style={{ maxWidth: '640px', margin: '2rem auto', textAlign: 'center', padding: '2.5rem 1.5rem' }}>
-          <CheckCircle2 size={56} color="var(--li-success)" style={{ margin: '0 auto 1rem' }} />
-          <h2 style={{ fontSize: '1.45rem', fontWeight: 800, marginBottom: '0.5rem', color: 'var(--li-text-primary)' }}>
-            Reservation Request Submitted!
+        <div className="li-card li-state-card" style={{ maxWidth: '560px', margin: '2rem auto', textAlign: 'center', padding: '2.5rem 1.5rem' }}>
+          <CheckCircle2 size={48} color="var(--li-success)" style={{ margin: '0 auto 1rem' }} />
+          <h2 style={{ fontSize: '1.35rem', fontWeight: 700, marginBottom: '0.5rem', color: 'var(--li-text-primary)' }}>
+            Request Submitted
           </h2>
-          <p style={{ color: 'var(--li-text-secondary)', fontSize: '0.9rem', marginBottom: '1.25rem', lineHeight: 1.5 }}>
-            Your request to rent <strong>{car.make} {car.model}</strong> for <strong>{days} {days === 1 ? 'day' : 'days'}</strong> has been delivered to host <strong>{car.ownerName || 'Vehicle Host'}</strong>.
+          <p style={{ color: 'var(--li-text-secondary)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+            Your reservation request for <strong>{car.make} {car.model}</strong> has been sent to the host.
           </p>
 
-          <div
-            style={{
-              backgroundColor: '#f0fdf4',
-              border: '1px solid #bbf7d0',
-              padding: '1rem',
-              borderRadius: '8px',
-              maxWidth: '480px',
-              margin: '0 auto 1.5rem',
-              textAlign: 'left',
-              fontSize: '0.85rem'
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#166534', fontWeight: 700, marginBottom: '0.25rem' }}>
-              <Info size={16} /> Next Step: Host Approval & Payment
-            </div>
-            <p style={{ color: '#15803d', margin: 0, lineHeight: 1.45 }}>
-              <strong>No payment was charged today.</strong> You will receive an instant alert in the top notification bar as soon as the host approves your trip. You can then pay <strong>₹{total.toLocaleString('en-IN')}</strong> to finalize your booking.
-            </p>
-          </div>
-
-          <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
             <Link to="/my-rentals" className="li-btn li-btn-primary">
-              View My Bookings
+              View Bookings
             </Link>
             <Link to="/fleet" className="li-btn li-btn-subtle">
-              Browse More Cars
+              Browse Fleet
             </Link>
           </div>
         </div>
@@ -447,15 +427,12 @@ const CarDetailPage = () => {
           {/* Right Rail: Streamlined Reservation Request Box */}
           <aside className="li-booking-sidebar" style={{ flex: '1 1 35%' }}>
             <div className="li-card li-booking-card" style={{ padding: '1.5rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', marginBottom: '0.25rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', marginBottom: '1rem' }}>
                 <Calendar size={18} color="var(--li-primary)" />
                 <h3 className="li-booking-card-title" style={{ margin: 0, fontSize: '1.15rem' }}>
                   Request to Reserve
                 </h3>
               </div>
-              <p className="li-booking-card-subtitle" style={{ marginBottom: '1.1rem' }}>
-                No upfront payment required • Pay after host accepts
-              </p>
 
               {requestError && (
                 <div className="li-alert li-alert-danger" style={{ marginBottom: '1rem' }}>
@@ -623,9 +600,6 @@ const CarDetailPage = () => {
                         ₹{total.toLocaleString('en-IN')}.00
                       </span>
                     </div>
-                    <span style={{ display: 'block', fontSize: '0.7rem', color: '#16a34a', fontWeight: 600, marginTop: '4px' }}>
-                      ✓ Pay only after host approval
-                    </span>
                   </div>
 
                   {isAuthenticated ? (
@@ -635,21 +609,16 @@ const CarDetailPage = () => {
                       className="li-btn li-btn-primary li-btn-block"
                       style={{ padding: '0.65rem' }}
                     >
-                      {submitting ? 'Sending Request...' : 'Send Reservation Request to Host'}
+                      {submitting ? 'Submitting...' : 'Request to Reserve'}
                     </button>
                   ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                      <Link
-                        to="/login"
-                        state={{ from: { pathname: `/cars/${id}` } }}
-                        className="li-btn li-btn-primary li-btn-block"
-                      >
-                        Sign in to Request Vehicle
-                      </Link>
-                      <span style={{ fontSize: '0.725rem', color: 'var(--li-text-secondary)', textAlign: 'center' }}>
-                        Guests can view vehicle specs, but booking requires an account
-                      </span>
-                    </div>
+                    <Link
+                      to="/login"
+                      state={{ from: { pathname: `/cars/${id}` } }}
+                      className="li-btn li-btn-primary li-btn-block"
+                    >
+                      Sign in to Reserve
+                    </Link>
                   )}
                 </form>
               )}

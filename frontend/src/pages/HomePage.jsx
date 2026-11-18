@@ -241,50 +241,39 @@ const HomePage = () => {
         </main>
 
         {/* ========================================================
-            RIGHT RAIL: Clean Commercial Information & Host CTA
+            RIGHT RAIL: Quick Actions & Navigation
             ======================================================== */}
         <aside className="li-right-rail">
-          {/* List Your Car Promotion Widget - ONLY SHOWN WHEN LOGGED IN */}
           {isAuthenticated && (
-            <div className="li-card li-widget-card" style={{ borderLeft: '3px solid var(--li-primary)' }}>
-              <div className="li-widget-header">
-                <span>List Your Car for Rent</span>
-                <Car size={16} color="var(--li-primary)" />
-              </div>
-              <p style={{ fontSize: '0.8rem', color: 'var(--li-text-secondary)', lineHeight: 1.45, marginBottom: '0.85rem' }}>
-                Turn your idle vehicle into passive income. List your car on DriveFlow in less than 2 minutes and rent it to verified drivers.
-              </p>
-              <Link to="/add-car" className="li-btn li-btn-primary li-btn-block li-btn-sm">
-                <Plus size={14} /> Add Vehicle Now
+            <div className="li-card li-widget-card" style={{ padding: '0.85rem 1rem' }}>
+              <Link to="/add-car" className="li-btn li-btn-primary li-btn-block li-btn-sm" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}>
+                <Plus size={14} /> List a Vehicle
               </Link>
             </div>
           )}
 
-          {/* DriveFlow Policies Widget */}
-          <div className="li-card li-widget-card">
-            <div className="li-widget-header">
-              <span>DriveFlow Rental Guidelines</span>
-              <Info size={16} color="var(--li-text-secondary)" />
+          <div className="li-card li-widget-card" style={{ padding: '1rem' }}>
+            <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--li-text-primary)', display: 'block', marginBottom: '0.65rem' }}>
+              Quick Navigation
+            </span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.8rem' }}>
+              <Link to="/fleet" style={{ color: 'var(--li-primary)', textDecoration: 'none', fontWeight: 500 }}>
+                Browse All Vehicles
+              </Link>
+              {isAuthenticated && (
+                <>
+                  <Link to="/my-rentals?tab=bookings" style={{ color: 'var(--li-primary)', textDecoration: 'none', fontWeight: 500 }}>
+                    My Bookings
+                  </Link>
+                  <Link to="/my-rentals?tab=host_requests" style={{ color: 'var(--li-primary)', textDecoration: 'none', fontWeight: 500 }}>
+                    Host Requests
+                  </Link>
+                  <Link to="/my-rentals?tab=saved" style={{ color: 'var(--li-primary)', textDecoration: 'none', fontWeight: 500 }}>
+                    Saved Vehicles
+                  </Link>
+                </>
+              )}
             </div>
-
-            <ul className="li-news-list">
-              <li className="li-news-item">
-                <h4>Flexible Cancellation</h4>
-                <p>Free cancellation up to 24h before scheduled pickup.</p>
-              </li>
-              <li className="li-news-item">
-                <h4>Insurance Included</h4>
-                <p>Every booking includes basic collision and theft protection.</p>
-              </li>
-              <li className="li-news-item">
-                <h4>24/7 Roadside Assistance</h4>
-                <p>Dedicated customer support team available around the clock.</p>
-              </li>
-              <li className="li-news-item">
-                <h4>Verified Drivers Only</h4>
-                <p>Drivers must provide a valid driving license number upon booking.</p>
-              </li>
-            </ul>
           </div>
         </aside>
       </div>

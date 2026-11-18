@@ -218,13 +218,10 @@ const AddVehiclePage = () => {
           <div style={{ borderBottom: '1px solid var(--li-border)', paddingBottom: '1rem', marginBottom: '1.5rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Car size={22} color="var(--li-primary)" />
-              <h1 style={{ fontSize: '1.45rem', fontWeight: 800, color: 'var(--li-text-primary)' }}>
+              <h1 style={{ fontSize: '1.35rem', fontWeight: 700, color: 'var(--li-text-primary)', margin: 0 }}>
                 List a Vehicle for Rent
               </h1>
             </div>
-            <p style={{ color: 'var(--li-text-secondary)', fontSize: '0.85rem', marginTop: '0.35rem' }}>
-              Register your car on DriveFlow to receive booking requests from verified drivers. You retain full control to accept or reject any rental request.
-            </p>
           </div>
 
           {serverError && (
@@ -471,32 +468,8 @@ const AddVehiclePage = () => {
                 </label>
                 <span style={{ fontSize: '0.75rem', color: 'var(--li-text-secondary)' }}>
                   {selectedPlaceholderCategory
-                    ? `Currently using clean ${selectedPlaceholderCategory} vector placeholder.`
-                    : 'Custom photo uploaded successfully.'}
-                </span>
-              </div>
-
-              {/* Live Preview Container */}
-              <div style={{ marginTop: '0.85rem', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--li-border)', height: '180px', backgroundColor: '#f1f5f9', position: 'relative' }}>
-                <img
-                  src={formData.imageUrl}
-                  alt="Vehicle Preview"
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                />
-                <span
-                  style={{
-                    position: 'absolute',
-                    bottom: '8px',
-                    right: '8px',
-                    backgroundColor: 'rgba(15,23,42,0.75)',
-                    color: '#ffffff',
-                    padding: '3px 8px',
-                    borderRadius: '4px',
-                    fontSize: '0.7rem',
-                    fontWeight: 600
-                  }}
-                >
-                  Live Listing Preview
+                    ? `Selected: ${selectedPlaceholderCategory} vector placeholder.`
+                    : 'Custom photo uploaded.'}
                 </span>
               </div>
             </div>

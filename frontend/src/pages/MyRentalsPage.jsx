@@ -173,12 +173,9 @@ const MyRentalsPage = () => {
       {/* Top Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.75rem' }}>
         <div>
-          <h1 style={{ fontSize: '1.45rem', fontWeight: 800, color: 'var(--li-text-primary)' }}>
-            Bookings & Reservations Hub
+          <h1 style={{ fontSize: '1.45rem', fontWeight: 800, color: 'var(--li-text-primary)', margin: 0 }}>
+            Bookings & Fleet
           </h1>
-          <p style={{ color: 'var(--li-text-secondary)', fontSize: '0.85rem' }}>
-            Track your trips, approve incoming guest requests, and manage your saved vehicles
-          </p>
         </div>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
           <Link to="/add-car" className="li-btn li-btn-primary li-btn-sm">
@@ -386,18 +383,15 @@ const MyRentalsPage = () => {
                               ? 'li-badge-maintenance'
                               : 'li-badge-rented'
                           }`}
-                          style={{ fontWeight: 700 }}
+                          style={{ fontWeight: 600, textTransform: 'capitalize' }}
                         >
                           {isPending
-                            ? 'Awaiting Host Approval'
+                            ? 'Pending Approval'
                             : isApproved
-                            ? 'Approved • Payment Required'
+                            ? 'Approved'
                             : isConfirmed
-                            ? 'Confirmed & Booked'
+                            ? 'Confirmed'
                             : rental.status}
-                        </span>
-                        <span style={{ display: 'block', fontSize: '0.725rem', color: 'var(--li-text-secondary)', marginTop: '4px' }}>
-                          Payment: {rental.paymentStatus?.toUpperCase()}
                         </span>
                       </div>
                     </div>
@@ -430,37 +424,18 @@ const MyRentalsPage = () => {
                     </div>
 
                     {/* Action Bar */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.85rem' }}>
-                      <div>
-                        {isPending && (
-                          <span style={{ fontSize: '0.775rem', color: '#b45309', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            <Clock size={14} /> No payment charged yet. Host will review your request.
-                          </span>
-                        )}
-                        {isApproved && (
-                          <span style={{ fontSize: '0.775rem', color: '#15803d', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            <CheckCircle2 size={14} /> Host approved your trip! Complete payment to confirm.
-                          </span>
-                        )}
-                        {isConfirmed && (
-                          <span style={{ fontSize: '0.775rem', color: 'var(--li-text-secondary)' }}>
-                            Txn Ref: <code>{rental.paymentDetails?.transactionId || 'PAID'}</code>
-                          </span>
-                        )}
-                      </div>
-
-                      <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        {/* PAY NOW BUTTON FOR APPROVED RENTALS */}
-                        {isApproved && (
-                          <button
-                            type="button"
-                            onClick={() => setPayingRental(rental)}
-                            className="li-btn li-btn-primary li-btn-sm"
-                            style={{ backgroundColor: '#16a34a', borderColor: '#16a34a', fontWeight: 700 }}
-                          >
-                            <CreditCard size={14} /> Pay ₹{Number(rental.totalAmount).toLocaleString('en-IN')} Now
-                          </button>
-                        )}
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginTop: '0.85rem', gap: '0.5rem' }}>
+                      {/* PAY NOW BUTTON FOR APPROVED RENTALS */}
+                      {isApproved && (
+                        <button
+                          type="button"
+                          onClick={() => setPayingRental(rental)}
+                          className="li-btn li-btn-primary li-btn-sm"
+                          style={{ backgroundColor: '#16a34a', borderColor: '#16a34a', fontWeight: 600 }}
+                        >
+                          <CreditCard size={14} /> Pay ₹{Number(rental.totalAmount).toLocaleString('en-IN')}
+                        </button>
+                      )}
 
                         {isConfirmed && (
                           <button
@@ -481,7 +456,6 @@ const MyRentalsPage = () => {
                         )}
                       </div>
                     </div>
-                  </div>
                 );
               })}
             </div>
@@ -553,8 +527,8 @@ const MyRentalsPage = () => {
                         </div>
                       </div>
 
-                      <span className={`li-badge li-badge-${isPending ? 'maintenance' : isConfirmed ? 'available' : 'category'}`}>
-                        {isPending ? 'Awaiting Your Approval' : isApproved ? 'Approved • Awaiting Payment' : isConfirmed ? 'Confirmed & Paid' : req.status}
+                      <span className={`li-badge li-badge-${isPending ? 'maintenance' : isConfirmed ? 'available' : 'category'}`} style={{ fontWeight: 600 }}>
+                        {isPending ? 'Pending Approval' : isApproved ? 'Approved' : isConfirmed ? 'Confirmed' : req.status}
                       </span>
                     </div>
 
@@ -578,19 +552,16 @@ const MyRentalsPage = () => {
                       </div>
                       <div>
                         <span style={{ display: 'block', fontSize: '0.725rem', color: 'var(--li-text-secondary)' }}>Guest Details</span>
-                        <span>Phone: {req.customerPhone || customer?.phone || 'Verified on booking'}</span>
+                        <span>Phone: {req.customerPhone || customer?.phone || 'Provided'}</span>
                         <span style={{ display: 'block', fontSize: '0.725rem', color: 'var(--li-text-secondary)' }}>
                           License: {req.customerLicense || customer?.drivingLicenseNumber || 'Provided'}
                         </span>
                       </div>
                       <div>
-                        <span style={{ display: 'block', fontSize: '0.725rem', color: 'var(--li-text-secondary)' }}>Trip Earnings</span>
+                        <span style={{ display: 'block', fontSize: '0.725rem', color: 'var(--li-text-secondary)' }}>Trip Rate</span>
                         <strong style={{ color: 'var(--li-primary)', fontSize: '0.95rem' }}>
                           ₹{Number(req.totalAmount || 0).toLocaleString('en-IN')}.00
                         </strong>
-                        <span style={{ display: 'block', fontSize: '0.725rem', color: isConfirmed ? '#16a34a' : 'var(--li-text-secondary)' }}>
-                          {isConfirmed ? '✓ Payment Received' : 'Collect on Approval'}
-                        </span>
                       </div>
                     </div>
 
